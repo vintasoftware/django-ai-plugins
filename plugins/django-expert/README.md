@@ -23,40 +23,44 @@ The Django Expert plugin equips Claude Code with deep expertise in Django develo
 - Claude Code version 1.0.33 or later (run `claude --version` to check)
 - If you need to update: `brew upgrade claude-code` (Homebrew) or `npm update -g @anthropic-ai/claude-code` (npm)
 
-### Installing the Plugin
+### Option 1: Install from GitHub (Recommended)
 
-#### Method 1: Interactive Installation
+Add this plugin marketplace to your Claude Code installation:
 
-1. Run the plugin manager:
-   ```shell
-   /plugin
-   ```
-
-2. Navigate to the **Discover** or **Marketplaces** tab to add this plugin's marketplace
-3. Browse available plugins and press **Enter** to install
-
-#### Method 2: Direct Command Installation
-
-If this plugin is available in a marketplace, install it directly:
-
-```shell
-/plugin install django-expert@marketplace-name
-```
-
-#### Method 3: Install from Local Path
-
-If you've cloned this repository locally:
-
-```shell
-/plugin marketplace add /path/to/django-ai-skills
-/plugin install django-expert@local
-```
-
-Or from GitHub:
-
-```shell
+```bash
+# Add the marketplace
 /plugin marketplace add vintasoftware/django-ai-skills
-/plugin install django-expert@vintasoftware
+
+# Install the Django Expert plugin
+/plugin install django-expert@vintasoftware-plugins
+
+# Or browse and install interactively
+/plugin
+```
+
+### Option 2: Local Development/Testing
+
+For local testing or development:
+
+```bash
+# Clone the repository
+git clone https://github.com/vintasoftware/django-ai-plugins.git
+cd django-ai-plugins
+
+# Add the local marketplace
+/plugin marketplace add .
+
+# Install the plugin from local marketplace
+/plugin install django-expert@vintasoftware-plugins
+```
+
+### Verify Installation
+
+List your installed marketplaces and plugins:
+
+```bash
+/plugin marketplace list
+/plugin list
 ```
 
 ### Installation Scopes
@@ -194,11 +198,6 @@ Contributions are welcome! To improve this plugin:
 ## Support
 
 For issues, questions, or feature requests:
-- GitHub Issues: https://github.com/vinta/django-ai-plugins/issues
+- GitHub Issues: https://github.com/vintasoftware/django-ai-plugins/issues
 - Documentation: See `skills/SKILL.md` and `skills/references/README.md`
 
-## Credits
-
-Developed by Vinta Software
-
-Built for Claude Code by Anthropic

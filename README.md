@@ -9,40 +9,44 @@ A collection of AI skills specialized in Django backend development.
 - Claude Code version 1.0.33 or later (run `claude --version` to check)
 - If you need to update: `brew upgrade claude-code` (Homebrew) or `npm update -g @anthropic-ai/claude-code` (npm)
 
-### Installing the Plugin
+### Option 1: Install from GitHub (Recommended)
 
-#### Method 1: Interactive Installation
+Add this plugin marketplace to your Claude Code installation:
 
-1. Run the plugin manager:
-   ```shell
-   /plugin
-   ```
+```bash
+# Add the marketplace
+/plugin marketplace add vintasoftware/django-ai-skills
 
-2. Navigate to the **Discover** or **Marketplaces** tab to add this plugin's marketplace
-3. Browse available plugins and press **Enter** to install
+# Install the Django Expert plugin
+/plugin install django-expert@vintasoftware-plugins
 
-#### Method 2: Direct Command Installation
-
-If this plugin is available in a marketplace, install it directly:
-
-```shell
-/plugin install django-ai-plugins@marketplace-name
+# Or browse and install interactively
+/plugin
 ```
 
-#### Method 3: Install from Local Path
+### Option 2: Local Development/Testing
 
-If you've cloned this repository locally:
+For local testing or development:
 
-```shell
-/plugin marketplace add /path/to/django-ai-plugins
-/plugin install django-ai-plugins@local
+```bash
+# Clone the repository
+git clone https://github.com/vintasoftware/django-ai-plugins.git
+cd django-ai-plugins
+
+# Add the local marketplace
+/plugin marketplace add .
+
+# Install the plugin from local marketplace
+/plugin install django-expert@vintasoftware-plugins
 ```
 
-Or from GitHub:
+### Verify Installation
 
-```shell
-/plugin marketplace add vintasoftware/django-ai-plugins
-/plugin install django-ai-plugins@vintasoftware
+List your installed marketplaces and plugins:
+
+```bash
+/plugin marketplace list
+/plugin list
 ```
 
 ### Installation Scopes
