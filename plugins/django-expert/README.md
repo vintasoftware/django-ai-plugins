@@ -65,6 +65,8 @@ Once installed, the Django Expert skill will be automatically invoked when you:
 - Optimize Django performance
 - Implement Django security best practices
 
+The skill can also call the `django-ai-boost` MCP server if installed, for enhanced capabilities.
+
 ### Example Interactions
 
 **Creating Django Models:**

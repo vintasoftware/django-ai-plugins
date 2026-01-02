@@ -53,7 +53,7 @@ When installing, choose where the plugin should be available:
 - **Project scope**: Shared with all collaborators via `.claude/settings.json`
 - **Local scope**: Available only for you in this specific repository
 
-## Integration with django-ai-boost MCP Server
+## Integration with `django-ai-boost` MCP Server
 
 This skill works seamlessly with the [django-ai-boost MCP server](https://github.com/vintasoftware/django-ai-boost), which provides additional Django-specific tools and capabilities for Claude Code.
 
