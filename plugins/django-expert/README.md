@@ -18,40 +18,54 @@ The Django Expert plugin equips Claude Code with deep expertise in Django develo
 
 ## Installation
 
-### Local Development Installation
+### Prerequisites
 
-1. Navigate to the plugin directory:
-```bash
-cd /path/to/django-ai-plugins/plugins/django-expert
+- Claude Code version 1.0.33 or later (run `claude --version` to check)
+- If you need to update: `brew upgrade claude-code` (Homebrew) or `npm update -g @anthropic-ai/claude-code` (npm)
+
+### Installing the Plugin
+
+#### Method 1: Interactive Installation
+
+1. Run the plugin manager:
+   ```shell
+   /plugin
+   ```
+
+2. Navigate to the **Discover** or **Marketplaces** tab to add this plugin's marketplace
+3. Browse available plugins and press **Enter** to install
+
+#### Method 2: Direct Command Installation
+
+If this plugin is available in a marketplace, install it directly:
+
+```shell
+/plugin install django-expert@marketplace-name
 ```
 
-2. Add the local marketplace to Claude Code:
-```bash
-claude
-/plugin marketplace add .
+#### Method 3: Install from Local Path
+
+If you've cloned this repository locally:
+
+```shell
+/plugin marketplace add /path/to/django-ai-skills
+/plugin install django-expert@local
 ```
 
-3. Install the plugin:
-```bash
-/plugin install django-expert@django-expert-dev
+Or from GitHub:
+
+```shell
+/plugin marketplace add vintasoftware/django-ai-skills
+/plugin install django-expert@vintasoftware
 ```
 
-4. Restart Claude Code to load the plugin.
+### Installation Scopes
 
-### GitHub Installation
+When installing, choose where the plugin should be available:
 
-1. Add the marketplace from GitHub:
-```bash
-claude
-/plugin marketplace add vinta/django-ai-plugins
-```
-
-2. Install the plugin:
-```bash
-/plugin install django-expert@django-ai-plugins
-```
-
-3. Restart Claude Code.
+- **User scope** (default): Available across all your projects
+- **Project scope**: Shared with all collaborators via `.claude/settings.json`
+- **Local scope**: Available only for you in this specific repository
 
 ## Usage
 
