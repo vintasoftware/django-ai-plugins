@@ -15,7 +15,7 @@ Add this plugin marketplace to your Claude Code installation:
 
 ```bash
 # Add the marketplace
-/plugin marketplace add vintasoftware/django-ai-skills
+/plugin marketplace add vintasoftware/django-ai-plugins
 
 # Install the Django Expert plugin
 /plugin install django-expert@vintasoftware-plugins
