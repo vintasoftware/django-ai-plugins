@@ -130,7 +130,90 @@ CELERY_BROKER_USE_SSL = {
 # Connection pool
 CELERY_BROKER_POOL_LIMIT = 10
 CELERY_BROKER_HEARTBEAT = 10
+
+# Confirm message delivery (recommended for reliability)
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'confirm_publish': True,
+}
 ```
+
+## Broker Transport Options
+
+Critical settings for message delivery reliability.
+
+### Redis Visibility Timeout
+
+When using Redis, set `visibility_timeout` to control how long a task remains invisible after being picked up. If a worker crashes before acknowledging, the task becomes visible again after this timeout.
+
+```python
+# Redis visibility timeout (default: 1 hour)
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 3600,  # 1 hour in seconds
+}
+```
+
+**Important:** Set visibility timeout longer than your longest task. If a task takes longer than the timeout, it will be redelivered to another worker while still running.
+
+### RabbitMQ Publisher Confirms
+
+Enable publisher confirms to ensure messages are actually delivered to the broker.
+
+```python
+# RabbitMQ: confirm message delivery
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'confirm_publish': True,
+}
+```
+
+### SQS Configuration
+
+```python
+# AWS SQS
+CELERY_BROKER_URL = 'sqs://aws_access_key:aws_secret_key@'
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'region': 'us-east-1',
+    'visibility_timeout': 3600,
+    'polling_interval': 1,
+    'queue_name_prefix': 'celery-',
+}
+```
+
+## Separating Redis Instances
+
+**Critical:** Use separate Redis instances for different purposes to prevent cascade failures.
+
+```python
+# BAD: Single Redis for everything
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CACHES = {'default': {'BACKEND': '...', 'LOCATION': 'redis://localhost:6379/0'}}
+
+# GOOD: Separate Redis instances/databases
+CELERY_BROKER_URL = 'redis://localhost:6379/0'      # Task queue
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'  # Results
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://localhost:6379/2',     # Cache
+    }
+}
+
+# BEST: Separate Redis servers in production
+CELERY_BROKER_URL = 'redis://redis-queue:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis-results:6379/0'
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis-cache:6379/0',
+    }
+}
+```
+
+Why separate?
+- Cache eviction won't affect task queue
+- Result backend memory pressure won't block new tasks
+- Easier to scale each component independently
+- Isolates failures
 
 ## Result Backend Configuration
 

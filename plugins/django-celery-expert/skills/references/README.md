@@ -8,12 +8,19 @@ Reference files provide detailed guidelines, patterns, and examples that would m
 
 ## Reference Files
 
+- **`django-integration.md`** - Django-specific patterns (transaction.on_commit, recovery tasks, testing)
 - **`task-design-patterns.md`** - Task implementation patterns and workflows
-- **`configuration-guide.md`** - Django-Celery setup and configuration
+- **`configuration-guide.md`** - Django-Celery setup, broker transport options, configuration
 - **`error-handling.md`** - Retry strategies and failure handling
 - **`periodic-tasks.md`** - Celery Beat and scheduled tasks
 - **`monitoring-observability.md`** - Monitoring, logging, and debugging
-- **`production-deployment.md`** - Production deployment and scaling
+- **`production-deployment.md`** - Production deployment, warnings, and scaling
+
+## Sources
+
+Best practices incorporated from:
+- [Celery in the Wild: Tips and Tricks](https://www.vintasoftware.com/blog/celery-wild-tips-and-tricks-run-async-tasks-real-world) - Vinta Software
+- [A Guide on Django Celery Tasks That Actually Work](https://www.vintasoftware.com/blog/guide-django-celery-tasks) - Vinta Software
 
 ## Usage
 

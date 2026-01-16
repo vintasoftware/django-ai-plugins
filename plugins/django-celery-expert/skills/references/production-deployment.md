@@ -342,6 +342,93 @@ celery -A myproject worker -Q default -c 4 -n default@%h
 celery -A myproject worker -Q low-priority -c 8 -n low@%h
 ```
 
+## Deployment Warnings
+
+### Task Signature Changes
+
+**Critical:** Drain all queues before deploying changes to task signatures (adding, removing, or renaming parameters).
+
+```python
+# BEFORE: Task with two parameters
+@shared_task
+def process_order(order_id, notify=True):
+    pass
+
+# AFTER: Task with changed signature
+@shared_task
+def process_order(order_id, notify=True, priority='normal'):  # New param
+    pass
+```
+
+**Problem:** Old messages in the queue have the old signature. When new workers pick them up, they may fail or behave unexpectedly.
+
+**Solution:**
+
+```bash
+# 1. Stop producers (or pause task creation)
+# 2. Wait for queues to drain
+celery -A myproject inspect reserved
+celery -A myproject inspect active
+
+# 3. Verify queues are empty
+celery -A myproject inspect stats  # Check queue lengths
+
+# 4. Deploy new code
+# 5. Restart workers
+# 6. Resume producers
+```
+
+**Alternative: Backwards-Compatible Changes**
+
+```python
+# Make new parameters optional with defaults
+@shared_task
+def process_order(order_id, notify=True, priority=None):
+    if priority is None:
+        priority = 'normal'  # Handle old messages
+    pass
+```
+
+### Avoid Long ETAs and Countdowns
+
+Tasks with long `eta` or `countdown` values can cause issues:
+
+```python
+# BAD: Task scheduled far in the future
+my_task.apply_async(eta=datetime.now() + timedelta(days=30))
+my_task.apply_async(countdown=60*60*24*30)  # 30 days
+
+# Problems:
+# - Task signature might change before execution
+# - Broker restarts may lose the task
+# - Visibility timeout issues with Redis/SQS
+```
+
+**Better alternatives:**
+- Use Celery Beat for scheduled tasks
+- Store future tasks in database with a periodic recovery task
+- Use a dedicated scheduling service
+
+## Soft Shutdown (Celery 5.5+)
+
+Celery 5.5+ introduced soft shutdown for cleaner worker termination.
+
+```python
+# settings.py
+CELERY_WORKER_ENABLE_SOFT_SHUTDOWN_ON_IDLE = True
+CELERY_WORKER_SOFT_SHUTDOWN_TIMEOUT = 60  # Wait up to 60s for tasks to complete
+```
+
+```bash
+# Gracefully shutdown with soft timeout
+celery -A myproject control shutdown --soft-timeout=60
+```
+
+Benefits:
+- Workers finish current tasks before shutting down
+- No task loss during deployments
+- Cleaner rolling updates in Kubernetes
+
 ## Graceful Shutdown
 
 ### Signal Handling

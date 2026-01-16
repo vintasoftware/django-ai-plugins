@@ -75,6 +75,7 @@ Follow this workflow when handling Django Celery requests:
 
 Based on the task type, reference the appropriate bundled documentation:
 
+- **Django-specific patterns** -> `references/django-integration.md`
 - **Task implementation** -> `references/task-design-patterns.md`
 - **Configuration & setup** -> `references/configuration-guide.md`
 - **Error handling & retries** -> `references/error-handling.md`
@@ -117,6 +118,12 @@ Before presenting the solution:
 ## Bundled Resources
 
 **references/** - Comprehensive Celery documentation loaded into context as needed
+
+- **`references/django-integration.md`**
+  - transaction.on_commit() for safe task queuing
+  - Database as source of truth with recovery tasks
+  - Request-task correlation with django-guid
+  - Testing Django Celery tasks
 
 - **`references/task-design-patterns.md`**
   - Task signatures and calling patterns

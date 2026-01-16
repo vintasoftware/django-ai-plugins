@@ -58,12 +58,22 @@ The plugin includes comprehensive reference documentation in `skills/references/
 
 | File | Topics |
 |------|--------|
+| `django-integration.md` | transaction.on_commit, recovery tasks, django-guid, testing |
 | `task-design-patterns.md` | Task signatures, idempotency, workflows (chains, groups, chords) |
-| `configuration-guide.md` | Django integration, broker setup, queues, serialization |
+| `configuration-guide.md` | Broker setup, transport options, queues, serialization |
 | `error-handling.md` | Retries, backoff, timeouts, dead letter queues |
 | `periodic-tasks.md` | Celery Beat, crontabs, database scheduler |
 | `monitoring-observability.md` | Flower, Prometheus, logging, debugging |
-| `production-deployment.md` | Systemd, Docker, Kubernetes, scaling |
+| `production-deployment.md` | Systemd, Docker, Kubernetes, deployment warnings, scaling |
+
+## Sources
+
+This plugin incorporates best practices from:
+
+- [Celery in the Wild: Tips and Tricks to Run Async Tasks in the Real World](https://www.vintasoftware.com/blog/celery-wild-tips-and-tricks-run-async-tasks-real-world) - Vinta Software
+- [A Guide on Django Celery Tasks That Actually Work](https://www.vintasoftware.com/blog/guide-django-celery-tasks) - Vinta Software
+- [Celery Documentation](https://docs.celeryq.dev/)
+- [Django Documentation](https://docs.djangoproject.com/)
 
 ## Requirements
 
