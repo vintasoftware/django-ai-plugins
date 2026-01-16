@@ -16,61 +16,6 @@ The Django Expert plugin equips Claude Code with deep expertise in Django develo
 - **Performance Optimization**: Query optimization, caching, database indexing
 - **Progressive Documentation**: On-demand reference files loaded only when needed
 
-## Installation
-
-### Prerequisites
-
-- Claude Code version 1.0.33 or later (run `claude --version` to check)
-- If you need to update: `brew upgrade claude-code` (Homebrew) or `npm update -g @anthropic-ai/claude-code` (npm)
-
-### Option 1: Install from GitHub (Recommended)
-
-Add this plugin marketplace to your Claude Code installation:
-
-```bash
-# Add the marketplace
-/plugin marketplace add vintasoftware/django-ai-plugins
-
-# Install the Django Expert plugin
-/plugin install django-expert@vintasoftware-plugins
-
-# Or browse and install interactively
-/plugin
-```
-
-### Option 2: Local Development/Testing
-
-For local testing or development:
-
-```bash
-# Clone the repository
-git clone https://github.com/vintasoftware/django-ai-plugins.git
-cd django-ai-plugins
-
-# Add the local marketplace
-/plugin marketplace add .
-
-# Install the plugin from local marketplace
-/plugin install django-expert@vintasoftware-plugins
-```
-
-### Verify Installation
-
-List your installed marketplaces and plugins:
-
-```bash
-/plugin marketplace list
-/plugin list
-```
-
-### Installation Scopes
-
-When installing, choose where the plugin should be available:
-
-- **User scope** (default): Available across all your projects
-- **Project scope**: Shared with all collaborators via `.claude/settings.json`
-- **Local scope**: Available only for you in this specific repository
-
 ## Usage
 
 Once installed, the Django Expert skill will be automatically invoked when you:
@@ -151,49 +96,9 @@ Edit `skills/SKILL.md` to:
 - Configure allowed tools via frontmatter
 - Add metadata for categorization
 
-## Development Workflow
-
-### Testing Locally
-
-1. Make changes to the plugin files
-2. Reinstall the plugin:
-```bash
-/plugin uninstall django-expert
-/plugin install django-expert@django-expert-dev
-```
-3. Restart Claude Code
-4. Test with Django-related queries
-
-### Iteration Tips
-
-- Test with real Django tasks from your projects
-- Refine instructions based on Claude's responses
-- Add more examples to SKILL.md for common scenarios
-- Populate reference files incrementally as needed
-- Use verbose descriptions in frontmatter for better skill discovery
-
-## Version History
-
-- **1.0.0** - Initial release with core Django expertise
-  - Model design and ORM guidance
-  - Views and URL patterns
-  - Django REST Framework support
-  - Testing, security, and performance guidelines
-  - Reference documentation structure
-
 ## License
 
-MIT
-
-## Contributing
-
-Contributions are welcome! To improve this plugin:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly with various Django scenarios
-5. Submit a pull request
+MIT @ Vinta Software
 
 ## Support
 
