@@ -1,72 +1,74 @@
-# django-ai-plugins
+# Django Agent Skills
 
-A collection of AI skills specialized in Django backend development.
+A collection of skills for AI coding agents specialized in Django backend development. Skills are packaged instructions and references that extend agent capabilities.
+
+Skills follow the [Agent Skills](https://agentskills.io/) format and work with any compatible AI coding agent.
+
+## Available Skills
+
+### django-expert
+
+Comprehensive Django development guidelines from Vinta Software. Contains best practices across multiple categories for building robust Django applications.
+
+**Use when:**
+- Building new Django models, views, or APIs
+- Implementing authentication or authorization
+- Setting up Django REST Framework endpoints
+- Reviewing Django code for best practices
+- Optimizing database queries and performance
+
+**Categories covered:**
+- Project structure and configuration
+- Models and database design
+- Views and URL routing
+- Django REST Framework integration
+- Security best practices
+- Testing strategies
+- Performance optimization
 
 ## Installation
 
-### Prerequisites
-
-- Claude Code version 1.0.33 or later (run `claude --version` to check)
-- If you need to update: `brew upgrade claude-code` (Homebrew) or `npm update -g @anthropic-ai/claude-code` (npm)
-
-### Option 1: Install from GitHub (Recommended)
-
-Add this plugin marketplace to your Claude Code installation:
-
 ```bash
-# Add the marketplace
-/plugin marketplace add vintasoftware/django-ai-plugins
-
-# Install the Django Expert plugin
-/plugin install django-expert@vintasoftware-plugins
-
-# Or browse and install interactively
-/plugin
+npx add-skill vintasoftware/django-ai-plugins
 ```
 
-### Option 2: Local Development/Testing
-
-For local testing or development:
+To list available skills before installing:
 
 ```bash
-# Clone the repository
-git clone https://github.com/vintasoftware/django-ai-plugins.git
-cd django-ai-plugins
-
-# Add the local marketplace
-/plugin marketplace add .
-
-# Install the plugin from local marketplace
-/plugin install django-expert@vintasoftware-plugins
+npx add-skill vintasoftware/django-ai-plugins -l
 ```
 
-### Verify Installation
+## Usage
 
-List your installed marketplaces and plugins:
+Skills are automatically available once installed. The agent will use them when relevant tasks are detected.
 
-```bash
-/plugin marketplace list
-/plugin list
+**Examples:**
+```
+Create a new Django model for user profiles
+```
+```
+Set up a REST API endpoint with authentication
+```
+```
+Review this Django view for security issues
 ```
 
-### Installation Scopes
+## Skill Structure
 
-When installing, choose where the plugin should be available:
+Each skill contains:
+- `SKILL.md` - Instructions for the agent
+- `references/` - Supporting documentation
 
-- **User scope** (default): Available across all your projects
-- **Project scope**: Shared with all collaborators via `.claude/settings.json`
-- **Local scope**: Available only for you in this specific repository
+## Integration with django-ai-boost MCP Server
 
-## Integration with `django-ai-boost` MCP Server
-
-This skill works seamlessly with the [django-ai-boost MCP server](https://github.com/vintasoftware/django-ai-boost), which provides additional Django-specific tools and capabilities for Claude Code.
+This skill works seamlessly with the [django-ai-boost MCP server](https://github.com/vintasoftware/django-ai-boost), which provides additional Django-specific tools and capabilities.
 
 To use both together:
 
 1. Install the django-ai-boost MCP server following its documentation
-2. Install this django-ai-plugins plugin using the instructions above
-3. The skills in this plugin will leverage the tools provided by the MCP server for enhanced Django development capabilities
+2. Install this skill using the instructions above
+3. The skills will leverage the tools provided by the MCP server for enhanced Django development capabilities
 
-## Usage
+## License
 
-Once installed, the Django-specific skills will be available in your Claude Code sessions, providing specialized assistance for Django backend development tasks.
+MIT @ Vinta Software
