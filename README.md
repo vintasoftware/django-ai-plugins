@@ -25,6 +25,28 @@ Comprehensive Django development guidelines from Vinta Software. Contains best p
 - Security best practices
 - Testing strategies
 - Performance optimization
+- Production deployment
+
+### django-celery-expert
+
+Expert guidance for Django applications using Celery for asynchronous task processing. Incorporates best practices from Vinta Software's production experience.
+
+**Use when:**
+- Creating background tasks for email, notifications, or data processing
+- Configuring Celery workers and message brokers
+- Implementing retry logic and error handling
+- Setting up periodic/scheduled tasks with Celery Beat
+- Monitoring and debugging Celery tasks
+- Deploying Celery to production
+
+**Categories covered:**
+- Django-Celery integration patterns (transaction.on_commit, recovery tasks)
+- Task design patterns (idempotency, workflows, atomicity)
+- Broker configuration (Redis, RabbitMQ, SQS)
+- Error handling and retry strategies
+- Periodic tasks and scheduling
+- Monitoring and observability (Flower, Prometheus)
+- Production deployment and scaling
 
 ## Installation
 
