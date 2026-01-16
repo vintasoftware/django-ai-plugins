@@ -1,0 +1,11 @@
+{
+  "name": "django-celery-expert",
+  "version": "1.0.0",
+  "description": "Django and Celery best practices for asynchronous task processing. Expert guidance for task design, worker configuration, monitoring, error handling, and production deployment.",
+  "author": {
+    "name": "Vinta Software",
+    "url": "https://github.com/vintasoftware"
+  },
+  "repository": "https://github.com/vintasoftware/django-ai-plugins",
+  "license": "MIT"
+}

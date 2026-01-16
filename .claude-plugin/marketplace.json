@@ -12,6 +12,12 @@
       "source": "./plugins/django-expert",
       "description": "Comprehensive Django backend development guidelines and best practices. Expert guidance for models, views, templates, DRF, testing, and deployment.",
       "category": "development"
+    },
+    {
+      "name": "django-celery-expert",
+      "source": "./plugins/django-celery-expert",
+      "description": "Django and Celery best practices for asynchronous task processing. Expert guidance for task design, worker configuration, monitoring, error handling, and production deployment.",
+      "category": "development"
     }
   ]
 }
