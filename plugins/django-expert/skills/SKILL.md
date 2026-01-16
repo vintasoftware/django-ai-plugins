@@ -50,6 +50,13 @@ Invoke this skill when you encounter these triggers:
 - "Optimize database queries"
 - "Add caching to..."
 
+**Production Deployment:**
+- "Deploy Django to production"
+- "Configure Django for production"
+- "Set up HTTPS/SSL for Django"
+- "Production settings checklist"
+- "Configure production database/cache"
+
 ## Instructions
 
 Follow this workflow when handling Django development requests:
@@ -63,6 +70,7 @@ Follow this workflow when handling Django development requests:
 - Authentication/permissions (user models, access control)
 - Testing (unit tests, integration tests, fixtures)
 - Security review (CSRF, XSS, SQL injection, permissions)
+- Production deployment (settings, HTTPS, database, caching, monitoring)
 - Template rendering (Django templates, context processors)
 
 **Leverage available context:**
@@ -91,6 +99,14 @@ Based on the task type, reference the appropriate bundled documentation:
   - Caching strategies (Redis, Memcached, database caching)
   - Database indexing and query profiling
   - Connection pooling and async patterns
+
+- **Production deployment** -> `references/production-deployment.md`
+  - Critical settings (DEBUG, SECRET_KEY, ALLOWED_HOSTS)
+  - HTTPS and SSL/TLS configuration
+  - Database and cache configuration
+  - Static/media file serving
+  - Error monitoring and logging
+  - Deployment process and health checks
 
 - **Security concerns** -> `references/security-checklist.md`
   - CSRF/XSS/SQL injection prevention
@@ -198,6 +214,17 @@ These reference files provide detailed guidance beyond this SKILL.md overview:
   - Database connection pooling
   - Profiling and monitoring tools
   - Async views and background tasks
+
+- **`references/production-deployment.md`** (~20k words)
+  - Critical settings (DEBUG, SECRET_KEY, ALLOWED_HOSTS)
+  - Database configuration and connection pooling
+  - HTTPS/SSL configuration and security headers
+  - Static and media file serving
+  - Caching with Redis/Memcached
+  - Email configuration for production
+  - Error monitoring with Sentry
+  - Logging and health checks
+  - Zero-downtime deployment strategies
 
 - **`references/examples.md`** - Practical implementation examples
   - Model design with custom managers
