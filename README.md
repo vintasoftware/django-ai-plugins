@@ -51,13 +51,13 @@ Expert guidance for Django applications using Celery for asynchronous task proce
 ## Installation
 
 ```bash
-npx add-skill vintasoftware/django-ai-plugins
+npx skills add vintasoftware/django-ai-plugins
 ```
 
 To list available skills before installing:
 
 ```bash
-npx add-skill vintasoftware/django-ai-plugins -l
+npx skills add vintasoftware/django-ai-plugins -l
 ```
 
 ## Usage
