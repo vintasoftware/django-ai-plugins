@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "django-ai-plugins",
   "version": "1.0.0",
   "description": "A collection of Claude Code plugins for Django AI-assisted development",
@@ -17,6 +16,12 @@
       "name": "django-celery-expert",
       "source": "./plugins/django-celery-expert",
       "description": "Django and Celery best practices for asynchronous task processing. Expert guidance for task design, worker configuration, monitoring, error handling, and production deployment.",
+      "category": "development"
+    },
+    {
+      "name": "django-reviewer",
+      "source": "./plugins/django-reviewer",
+      "description": "Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Proactive agent that applies Django best practices and PEP 8.",
       "category": "development"
     }
   ]

@@ -1,12 +1,12 @@
 # Django Agent Skills
 
-A collection of skills for AI coding agents specialized in Django backend development. Skills are packaged instructions and references that extend agent capabilities.
+A collection of skills and agents for AI coding agents specialized in Django backend development. Skills are packaged instructions and references that extend agent capabilities. Agents are autonomous specialists that proactively review and refine code.
 
 Skills follow the [Agent Skills](https://agentskills.io/) format and work with any compatible AI coding agent.
 
-## Available Skills
+## Available Skills & Agents
 
-### django-expert
+### django-expert (Skill)
 
 Comprehensive Django development guidelines from Vinta Software. Contains best practices across multiple categories for building robust Django applications.
 
@@ -27,7 +27,7 @@ Comprehensive Django development guidelines from Vinta Software. Contains best p
 - Performance optimization
 - Production deployment
 
-### django-celery-expert
+### django-celery-expert (Skill)
 
 Expert guidance for Django applications using Celery for asynchronous task processing. Incorporates best practices from Vinta Software's production experience.
 
@@ -48,7 +48,29 @@ Expert guidance for Django applications using Celery for asynchronous task proce
 - Monitoring and observability (Flower, Prometheus)
 - Production deployment and scaling
 
+### django-reviewer (Agent)
+
+Autonomous code review agent that refines Django/Python code for clarity, consistency, and maintainability. Focuses on recently modified code and applies Django best practices without changing functionality.
+
+**Use when:**
+- Reviewing recently modified Django code for anti-patterns
+- Refining models, views, serializers, or ORM queries
+- Enforcing PEP 8 and Django coding style consistency
+- Detecting N+1 queries and performance issues
+- Simplifying overly complex view or serializer logic
+
+**What it reviews:**
+- N+1 queries (missing `select_related`/`prefetch_related`)
+- Business logic placement (fat models, thin views)
+- ORM usage vs raw SQL
+- Import organization and naming conventions
+- DRF serializer and viewset patterns
+- Database constraints and index usage
+- Test structure and coverage patterns
+
 ## Installation
+
+### To install the skills, run:
 
 ```bash
 npx skills add vintasoftware/django-ai-plugins
@@ -59,6 +81,22 @@ To list available skills before installing:
 ```bash
 npx skills add vintasoftware/django-ai-plugins -l
 ```
+
+### To install the agents, run:
+
+First, add the marketplace to Claude Code:
+
+```
+/plugin marketplace add vintasoftware/django-ai-plugins
+```
+
+Then install the agent plugin:
+
+```
+/plugin install django-reviewer@vintasoftware-django-ai-plugins
+```
+
+You can also browse all available plugins interactively with `/plugin` and navigate to the **Discover** tab.
 
 ## Usage
 
@@ -74,12 +112,16 @@ Set up a REST API endpoint with authentication
 ```
 Review this Django view for security issues
 ```
+```
+Use the django-reviewer agent to review my recent changes
+```
 
-## Skill Structure
+## Plugin Structure
 
-Each skill contains:
-- `SKILL.md` - Instructions for the agent
-- `references/` - Supporting documentation
+Each plugin contains either skills or agents:
+
+- **Skills** (`skills/SKILL.md`) — Instructions and reference documentation loaded on-demand
+- **Agents** (`agents/<name>.md`) — Autonomous specialists that proactively review and refine code
 
 ## Integration with django-ai-boost MCP Server
 
