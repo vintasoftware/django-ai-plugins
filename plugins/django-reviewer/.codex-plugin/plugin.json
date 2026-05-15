@@ -4,7 +4,6 @@
   "description": "Autonomous Django and Python code review agent for Codex.",
   "author": {
     "name": "Vinta Software",
-    "email": "hello@vinta.com.br",
     "url": "https://www.vinta.com.br/"
   },
   "homepage": "https://github.com/vintasoftware/django-ai-plugins",

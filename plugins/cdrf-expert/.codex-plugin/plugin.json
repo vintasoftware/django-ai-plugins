@@ -4,7 +4,6 @@
   "description": "Expert guidance for DRF class-based views and override hooks in Codex.",
   "author": {
     "name": "Vinta Software",
-    "email": "hello@vinta.com.br",
     "url": "https://www.vinta.com.br/"
   },
   "homepage": "https://github.com/vintasoftware/django-ai-plugins",
