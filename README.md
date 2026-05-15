@@ -63,6 +63,23 @@ Expert guidance for Django REST Framework class-based views using [Classy DRF](h
 - MRO debugging workflow
 - DRF version comparison workflow
 
+### django-safe-migration (Skill)
+
+Zero-downtime migration guidance for Django projects on PostgreSQL. Focuses on SQL-level safety during rolling deploys rather than only the migration operation names.
+
+**Use when:**
+- Reviewing whether a migration is safe to deploy
+- Writing a migration for schema changes under live traffic
+- Rewriting unsafe migration operations into staged patterns
+- Reasoning about PostgreSQL locks and deploy compatibility
+
+**Categories covered:**
+- `sqlmigrate`-driven review workflow
+- `SeparateDatabaseAndState` rollout patterns
+- Concurrent index creation and removal
+- Foreign key and check constraint validation strategy
+- `db_default`, `lock_timeout`, and `RunPython` safety rules
+
 ### django-reviewer (Agent)
 
 Autonomous code review agent that refines Django/Python code for clarity, consistency, and maintainability. Focuses on recently modified code and applies Django best practices without changing functionality.
@@ -98,6 +115,7 @@ Each plugin directory now also includes a Codex manifest at `.codex-plugin/plugi
 - `django-expert`
 - `django-celery-expert`
 - `cdrf-expert`
+- `django-safe-migration`
 - `django-reviewer`
 
 ### Generic Open-Plugin Installer
