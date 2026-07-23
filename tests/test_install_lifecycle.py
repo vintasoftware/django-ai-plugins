@@ -1,3 +1,4 @@
+import copy
 import importlib.util
 import json
 import shutil
@@ -177,6 +178,118 @@ class NativeDistributionTests(unittest.TestCase):
         self.assertEqual(discovered, sorted(expected))
         for skill_id in discovered:
             self.assertEqual(generator.validate_skill(ROOT / "skills" / skill_id), [])
+
+    def test_removing_catalog_record_prunes_only_generated_package_outputs(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source_catalog = self.load_catalog()
+            selected = [
+                plugin
+                for plugin in source_catalog["plugins"]
+                if plugin["id"] in {"cdrf-expert", "django-safe-migration"}
+            ]
+            for plugin in selected:
+                canonical = ROOT / Path(plugin["capability"]["canonical_path"]).parent
+                shutil.copytree(
+                    canonical,
+                    root / Path(plugin["capability"]["canonical_path"]).parent,
+                )
+                package = root / plugin["package"]
+                package.mkdir(parents=True)
+                (package / "README.md").write_text("keep package documentation\n")
+            catalog = {
+                key: source_catalog[key]
+                for key in (
+                    "schema_version",
+                    "repository",
+                    "defaults",
+                    "marketplaces",
+                )
+            }
+            catalog["plugins"] = selected
+            (root / "plugins" / "catalog.json").write_text(json.dumps(catalog))
+            generator.generate_adapters(root)
+
+            removed = catalog["plugins"].pop()
+            (root / "plugins" / "catalog.json").write_text(json.dumps(catalog))
+            changed = generator.generate_adapters(root)
+            removed_package = root / removed["package"]
+
+            self.assertIn(
+                f"{removed['package']}/.cursor-plugin/plugin.json",
+                changed,
+            )
+            self.assertEqual(
+                (removed_package / "README.md").read_text(),
+                "keep package documentation\n",
+            )
+            self.assertFalse((removed_package / ".claude-plugin/plugin.json").exists())
+            self.assertFalse((removed_package / ".codex-plugin/plugin.json").exists())
+            self.assertFalse((removed_package / ".cursor-plugin/plugin.json").exists())
+            self.assertFalse(
+                (
+                    removed_package
+                    / Path(removed["capability"]["package_path"]).parent
+                ).exists()
+            )
+
+    def test_complete_sixth_catalog_plugin_generates_every_adapter(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source_catalog = self.load_catalog()
+            base = copy.deepcopy(source_catalog["plugins"][2])
+            base.update(
+                {
+                    "id": "fixture-expert",
+                    "package": "plugins/fixture-expert",
+                    "description": "Complete fixture plugin.",
+                }
+            )
+            base["capability"].update(
+                {
+                    "canonical_path": "skills/fixture-expert/SKILL.md",
+                    "package_path": "skills/fixture-expert/SKILL.md",
+                }
+            )
+            base["interface"]["display_name"] = "Fixture Expert"
+            skill = root / "skills" / "fixture-expert"
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: fixture-expert\n"
+                "description: Complete fixture skill.\n---\n\n"
+                "Use this fixture for adapter contract tests.\n"
+            )
+            package = root / base["package"]
+            package.mkdir(parents=True)
+            catalog = {
+                key: source_catalog[key]
+                for key in (
+                    "schema_version",
+                    "repository",
+                    "defaults",
+                    "marketplaces",
+                )
+            }
+            catalog["plugins"] = [base]
+            (root / "plugins" / "catalog.json").write_text(json.dumps(catalog))
+
+            generator.generate_adapters(root)
+
+            for target in ("claude", "codex", "cursor"):
+                self.assertTrue(
+                    (package / f".{target}-plugin" / "plugin.json").is_file()
+                )
+            self.assertTrue((package / "skills/fixture-expert/SKILL.md").is_file())
+            for marketplace in (
+                root / ".claude-plugin/marketplace.json",
+                root / ".agents/plugins/marketplace.json",
+                root / ".cursor-plugin/marketplace.json",
+            ):
+                names = [
+                    entry["name"]
+                    for entry in json.loads(marketplace.read_text())["plugins"]
+                ]
+                self.assertEqual(names, ["fixture-expert"])
 
 
 if __name__ == "__main__":

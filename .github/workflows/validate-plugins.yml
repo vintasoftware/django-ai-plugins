@@ -1,0 +1,38 @@
+name: Validate plugins
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  offline-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check generated adapters
+        run: python scripts/generate_adapters.py --check
+      - name: Validate catalog and marketplaces
+        run: python scripts/validate_plugins.py
+      - name: Run contract tests
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Smoke Claude packages
+        run: python scripts/smoke_plugins.py --target claude
+      - name: Smoke Codex packages
+        run: python scripts/smoke_plugins.py --target codex
+      - name: Smoke Cursor packages
+        run: python scripts/smoke_plugins.py --target cursor
+      - name: Smoke OpenCode adapter
+        run: python scripts/smoke_plugins.py --target opencode
+      - name: Smoke generic Agent Skills
+        run: python scripts/smoke_plugins.py --target agent-skills

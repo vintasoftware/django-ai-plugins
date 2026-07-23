@@ -1,23 +1,10 @@
-# CDRF Expert Plugin
+# CDRF Expert
 
-A Django REST Framework skill focused on Classy DRF (https://www.cdrf.co) to select the right class-based views and override points with confidence.
+Guidance for choosing Django REST Framework class-based views, tracing request
+lifecycle and MRO, and selecting safe override hooks with Classy DRF.
 
-## What this skill covers
+The portable skill and its references are under `skills/cdrf-expert/`. Host
+manifests and this package-local projection are generated from the repository
+catalog.
 
-- Selecting the right DRF class (`APIView`, generic views, `ViewSet`, `ModelViewSet`)
-- Tracing class behavior with CDRF MRO and method source mapping
-- Choosing safe override hooks (`perform_*`, `get_queryset`, `get_serializer_class`)
-- Handling DRF version-specific behavior differences
-
-## Plugin structure
-
-```
-cdrf-expert/
-├── .claude-plugin/plugin.json
-├── skills/SKILL.md
-└── skills/references/
-    ├── class-selection-matrix.md
-    ├── lifecycle-and-overrides.md
-    ├── mro-debugging-playbook.md
-    └── version-check-workflow.md
-```
+See the shared [installation and lifecycle guide](../../docs/installation.md).

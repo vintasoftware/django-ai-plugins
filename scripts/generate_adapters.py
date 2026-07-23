@@ -428,6 +428,56 @@ def _remove_legacy_projection(plugin: dict[str, Any], root: Path) -> None:
         shutil.rmtree(legacy_references)
 
 
+def _orphan_generated_paths(
+    catalog: dict[str, Any], root: Path
+) -> list[Path]:
+    declared_packages = {
+        (root / plugin["package"]).resolve()
+        for plugin in catalog.get("plugins", [])
+        if isinstance(plugin, dict) and isinstance(plugin.get("package"), str)
+    }
+    orphans: list[Path] = []
+    for package in sorted((root / "plugins").iterdir()):
+        if not package.is_dir() or package.resolve() in declared_packages:
+            continue
+        manifests = [
+            package / f".{target}-plugin" / "plugin.json"
+            for target in ("claude", "codex", "cursor")
+        ]
+        if not all(path.is_file() for path in manifests):
+            continue
+        try:
+            names = {json.loads(path.read_text()).get("name") for path in manifests}
+        except json.JSONDecodeError:
+            continue
+        if names != {package.name}:
+            continue
+        orphans.extend(manifests)
+        for skill in (
+            package / "skills" / package.name,
+            package / "portable-skills" / package.name,
+        ):
+            if skill.is_dir() and not skill.is_symlink():
+                orphans.append(skill)
+        agent = package / "agents" / f"{package.name}.md"
+        if (
+            agent.is_file()
+            and "Generated from the canonical reviewer skill" in agent.read_text()
+        ):
+            orphans.append(agent)
+    return orphans
+
+
+def _remove_generated_path(path: Path) -> None:
+    parent = path.parent
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    elif path.exists() or path.is_symlink():
+        path.unlink()
+    if parent.is_dir() and not any(parent.iterdir()):
+        parent.rmdir()
+
+
 def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
     root = root.resolve()
     catalog = _load_catalog(root)
@@ -457,6 +507,7 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
     if validation_errors:
         raise GenerationFailure("\n".join(validation_errors))
     generated_files.extend(_native_outputs(catalog, root))
+    orphan_paths = _orphan_generated_paths(catalog, root)
 
     changed: list[str] = []
     for _, source, target in projections:
@@ -474,8 +525,9 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
     for _, content, target in generated_files:
         if not target.is_file() or target.read_text() != content:
             changed.append(str(target.relative_to(root)))
+    changed.extend(str(path.relative_to(root)) for path in orphan_paths)
 
-    changed.sort()
+    changed = sorted(set(changed))
     if check or not changed:
         return changed
 
@@ -491,6 +543,8 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
             if str(target.relative_to(root)) in changed:
                 _replace_directory(stage, target)
             _remove_legacy_projection(plugin, root)
+        for path in orphan_paths:
+            _remove_generated_path(path)
         for _, content, target in generated_files:
             if str(target.relative_to(root)) in changed:
                 _replace_file(content, target)
