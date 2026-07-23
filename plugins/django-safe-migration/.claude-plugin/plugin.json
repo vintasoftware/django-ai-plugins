@@ -1,6 +1,6 @@
 {
   "name": "django-safe-migration",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Write, review, and rewrite Django migrations for PostgreSQL with zero-downtime guarantees. Covers two-file splits, AddIndexConcurrently, FK NOT VALID + VALIDATE, db_default for NOT NULL columns, and RunPython safety rules.",
   "author": {
     "name": "Vinta Software",

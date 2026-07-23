@@ -1,7 +1,7 @@
 {
   "name": "django-ai-plugins",
-  "version": "1.0.0",
-  "description": "A collection of Claude Code plugins for Django AI-assisted development",
+  "version": "1.1.0",
+  "description": "Django skills and agents for AI-assisted development",
   "owner": {
     "name": "Vinta Software"
   },
@@ -19,9 +19,21 @@
       "category": "development"
     },
     {
+      "name": "cdrf-expert",
+      "source": "./plugins/cdrf-expert",
+      "description": "Expert guidance for Django REST Framework class-based views using Classy DRF (cdrf.co). Helps choose the right DRF generic/viewset class and override methods safely.",
+      "category": "development"
+    },
+    {
+      "name": "django-safe-migration",
+      "source": "./plugins/django-safe-migration",
+      "description": "Write, review, and rewrite Django migrations for PostgreSQL with zero-downtime guarantees. Covers two-file splits, AddIndexConcurrently, FK NOT VALID + VALIDATE, db_default for NOT NULL columns, and RunPython safety rules.",
+      "category": "development"
+    },
+    {
       "name": "django-reviewer",
       "source": "./plugins/django-reviewer",
-      "description": "Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Proactive agent that applies Django best practices and PEP 8.",
+      "description": "Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Applies Django best practices, PEP 8, and project standards.",
       "category": "development"
     }
   ]

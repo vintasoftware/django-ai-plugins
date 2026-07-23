@@ -1,7 +1,7 @@
 {
   "name": "django-celery-expert",
-  "version": "1.0.0",
-  "description": "Django and Celery best practices for asynchronous task processing in Codex.",
+  "version": "1.1.0",
+  "description": "Django and Celery best practices for asynchronous task processing. Expert guidance for task design, worker configuration, monitoring, error handling, and production deployment.",
   "author": {
     "name": "Vinta Software",
     "url": "https://www.vinta.com.br/"
@@ -18,7 +18,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Django Celery Expert",
-    "shortDescription": "Celery patterns for Django in Codex.",
+    "shortDescription": "Celery patterns for Django.",
     "longDescription": "Expert guidance for background task design, worker configuration, retries, scheduling, observability, and production Celery deployments in Django projects.",
     "developerName": "Vinta Software",
     "category": "Developer Tools",

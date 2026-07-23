@@ -1,7 +1,7 @@
 {
   "name": "cdrf-expert",
-  "version": "1.0.0",
-  "description": "Expert guidance for DRF class-based views and override hooks in Codex.",
+  "version": "1.1.0",
+  "description": "Expert guidance for Django REST Framework class-based views using Classy DRF (cdrf.co). Helps choose the right DRF generic/viewset class and override methods safely.",
   "author": {
     "name": "Vinta Software",
     "url": "https://www.vinta.com.br/"
@@ -18,7 +18,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "CDRF Expert",
-    "shortDescription": "DRF class and override guidance for Codex.",
+    "shortDescription": "DRF class and override guidance.",
     "longDescription": "Helps choose the correct Django REST Framework class-based view, trace request lifecycle and MRO, and select the safest override hook.",
     "developerName": "Vinta Software",
     "category": "Developer Tools",

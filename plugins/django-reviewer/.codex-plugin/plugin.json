@@ -1,7 +1,7 @@
 {
   "name": "django-reviewer",
-  "version": "1.0.0",
-  "description": "Autonomous Django and Python code review agent for Codex.",
+  "version": "1.1.0",
+  "description": "Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Applies Django best practices, PEP 8, and project standards.",
   "author": {
     "name": "Vinta Software",
     "url": "https://www.vinta.com.br/"
@@ -15,14 +15,15 @@
     "python",
     "agent"
   ],
+  "skills": "./portable-skills/",
   "interface": {
     "displayName": "Django Reviewer",
-    "shortDescription": "A Codex agent for Django code review.",
-    "longDescription": "Autonomous code review agent focused on Django and Python clarity, consistency, maintainability, and common ORM or DRF anti-patterns.",
+    "shortDescription": "Django and Python code review.",
+    "longDescription": "Code review focused on Django and Python clarity, consistency, maintainability, and common ORM or DRF anti-patterns.",
     "developerName": "Vinta Software",
     "category": "Developer Tools",
     "capabilities": [
-      "Agent",
+      "Interactive",
       "Review"
     ],
     "websiteURL": "https://github.com/vintasoftware/django-ai-plugins",

@@ -177,6 +177,142 @@ def _render_claude_agent(plugin: dict[str, Any], source: Path) -> str | None:
     )
 
 
+def _json_text(value: dict[str, Any]) -> str:
+    return json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+
+
+def _interface(plugin: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
+    interface = plugin["interface"]
+    override = plugin.get("overrides", {}).get("codex", {})
+    capabilities = (
+        ["Interactive", "Review"]
+        if plugin["capability"]["kind"] == "hybrid"
+        else ["Interactive", "Write"]
+    )
+    value: dict[str, Any] = {
+        "displayName": interface["display_name"],
+        "shortDescription": interface["short_description"],
+        "longDescription": interface["long_description"],
+        "developerName": defaults["author"]["name"],
+        "category": defaults["category"],
+        "capabilities": capabilities,
+        "websiteURL": override.get("website_url", defaults["homepage"]),
+        "defaultPrompt": interface["default_prompts"],
+    }
+    optional_fields = {
+        "privacyPolicyURL": override.get("privacy_policy_url"),
+        "termsOfServiceURL": override.get("terms_of_service_url"),
+    }
+    value.update({key: item for key, item in optional_fields.items() if item})
+    return value
+
+
+def _native_outputs(
+    catalog: dict[str, Any], root: Path
+) -> list[tuple[str, str, Path]]:
+    if not catalog.get("marketplaces") or not catalog.get("defaults"):
+        return []
+    defaults = catalog["defaults"]
+    outputs: list[tuple[str, str, Path]] = []
+    claude_plugins: list[dict[str, Any]] = []
+    codex_plugins: list[dict[str, Any]] = []
+    versions: list[str] = []
+
+    for plugin in catalog["plugins"]:
+        versions.append(plugin["version"])
+        package = root / plugin["package"]
+        claude_manifest = {
+            "name": plugin["id"],
+            "version": plugin["version"],
+            "description": plugin["description"],
+            "author": defaults["author"],
+            "homepage": defaults["homepage"],
+            "repository": catalog["repository"],
+            "license": defaults["license"],
+            "keywords": plugin["keywords"],
+        }
+        codex_manifest = {
+            **claude_manifest,
+            "skills": (
+                "./portable-skills/"
+                if plugin["capability"]["kind"] == "hybrid"
+                else "./skills/"
+            ),
+            "interface": _interface(plugin, defaults),
+        }
+        outputs.extend(
+            (
+                (
+                    plugin["id"],
+                    _json_text(claude_manifest),
+                    package / ".claude-plugin" / "plugin.json",
+                ),
+                (
+                    plugin["id"],
+                    _json_text(codex_manifest),
+                    package / ".codex-plugin" / "plugin.json",
+                ),
+            )
+        )
+        claude_plugins.append(
+            {
+                "name": plugin["id"],
+                "source": f"./{plugin['package']}",
+                "description": plugin["description"],
+                "category": "development",
+            }
+        )
+        codex_plugins.append(
+            {
+                "name": plugin["id"],
+                "source": {
+                    "source": "local",
+                    "path": f"./{plugin['package']}",
+                },
+                "policy": {
+                    "installation": "AVAILABLE",
+                    "authentication": "ON_INSTALL",
+                },
+                "category": defaults["category"],
+            }
+        )
+
+    collection_version = max(versions)
+    outputs.extend(
+        (
+            (
+                "claude-marketplace",
+                _json_text(
+                    {
+                        "name": catalog["marketplaces"]["claude"]["name"],
+                        "version": collection_version,
+                        "description": "Django skills and agents for AI-assisted development",
+                        "owner": {"name": defaults["author"]["name"]},
+                        "plugins": claude_plugins,
+                    }
+                ),
+                root / ".claude-plugin" / "marketplace.json",
+            ),
+            (
+                "codex-marketplace",
+                _json_text(
+                    {
+                        "name": catalog["marketplaces"]["codex"]["name"],
+                        "interface": {
+                            "displayName": catalog["marketplaces"]["codex"][
+                                "display_name"
+                            ]
+                        },
+                        "plugins": codex_plugins,
+                    }
+                ),
+                root / ".agents" / "plugins" / "marketplace.json",
+            ),
+        )
+    )
+    return outputs
+
+
 def _load_catalog(root: Path) -> dict[str, Any]:
     path = root / CATALOG_PATH
     try:
@@ -273,6 +409,7 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
             )
     if validation_errors:
         raise GenerationFailure("\n".join(validation_errors))
+    generated_files.extend(_native_outputs(catalog, root))
 
     changed: list[str] = []
     for _, source, target in projections:
