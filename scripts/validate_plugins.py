@@ -16,6 +16,7 @@ CATALOG_PATH = ROOT / "plugins" / "catalog.json"
 MARKETPLACE_PATHS = {
     "claude": ROOT / ".claude-plugin" / "marketplace.json",
     "codex": ROOT / ".agents" / "plugins" / "marketplace.json",
+    "cursor": ROOT / ".cursor-plugin" / "marketplace.json",
 }
 REQUIRED_PLUGIN_FIELDS = {
     "id",

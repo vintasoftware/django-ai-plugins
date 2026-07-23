@@ -1,0 +1,20 @@
+{
+  "name": "django-reviewer",
+  "displayName": "Django Reviewer",
+  "version": "1.1.0",
+  "description": "Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Applies Django best practices, PEP 8, and project standards.",
+  "author": {
+    "name": "Vinta Software"
+  },
+  "homepage": "https://github.com/vintasoftware/django-ai-plugins",
+  "repository": "https://github.com/vintasoftware/django-ai-plugins",
+  "license": "MIT",
+  "keywords": [
+    "django",
+    "code-review",
+    "python",
+    "agent"
+  ],
+  "category": "Developer Tools",
+  "skills": "./portable-skills/"
+}

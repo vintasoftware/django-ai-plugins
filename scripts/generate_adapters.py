@@ -216,6 +216,7 @@ def _native_outputs(
     outputs: list[tuple[str, str, Path]] = []
     claude_plugins: list[dict[str, Any]] = []
     codex_plugins: list[dict[str, Any]] = []
+    cursor_plugins: list[dict[str, Any]] = []
     versions: list[str] = []
 
     for plugin in catalog["plugins"]:
@@ -240,6 +241,23 @@ def _native_outputs(
             ),
             "interface": _interface(plugin, defaults),
         }
+        cursor_manifest = {
+            "name": plugin["id"],
+            "displayName": plugin["interface"]["display_name"],
+            "version": plugin["version"],
+            "description": plugin["description"],
+            "author": {"name": defaults["author"]["name"]},
+            "homepage": defaults["homepage"],
+            "repository": catalog["repository"],
+            "license": defaults["license"],
+            "keywords": plugin["keywords"],
+            "category": defaults["category"],
+            "skills": (
+                "./portable-skills/"
+                if plugin["capability"]["kind"] == "hybrid"
+                else "./skills/"
+            ),
+        }
         outputs.extend(
             (
                 (
@@ -251,6 +269,11 @@ def _native_outputs(
                     plugin["id"],
                     _json_text(codex_manifest),
                     package / ".codex-plugin" / "plugin.json",
+                ),
+                (
+                    plugin["id"],
+                    _json_text(cursor_manifest),
+                    package / ".cursor-plugin" / "plugin.json",
                 ),
             )
         )
@@ -274,6 +297,13 @@ def _native_outputs(
                     "authentication": "ON_INSTALL",
                 },
                 "category": defaults["category"],
+            }
+        )
+        cursor_plugins.append(
+            {
+                "name": plugin["id"],
+                "source": f"./{plugin['package']}",
+                "description": plugin["description"],
             }
         )
 
@@ -307,6 +337,23 @@ def _native_outputs(
                     }
                 ),
                 root / ".agents" / "plugins" / "marketplace.json",
+            ),
+            (
+                "cursor-marketplace",
+                _json_text(
+                    {
+                        "name": catalog["marketplaces"]["cursor"]["name"],
+                        "owner": {"name": defaults["author"]["name"]},
+                        "metadata": {
+                            "description": (
+                                "Django skills for AI-assisted development"
+                            ),
+                            "version": collection_version,
+                        },
+                        "plugins": cursor_plugins,
+                    }
+                ),
+                root / ".cursor-plugin" / "marketplace.json",
             ),
         )
     )

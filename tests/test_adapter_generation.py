@@ -117,6 +117,24 @@ class AdapterGenerationTests(unittest.TestCase):
                 self.assertEqual(generator.validate_skill(skill), [])
                 self.assertFalse((isolated / "skills" / "SKILL.md").exists())
 
+    def test_cursor_manifests_reference_generated_package_local_skills(self):
+        catalog = json.loads((ROOT / "plugins" / "catalog.json").read_text())
+
+        for plugin in catalog["plugins"]:
+            with self.subTest(plugin=plugin["id"]):
+                package = ROOT / plugin["package"]
+                manifest = json.loads(
+                    (package / ".cursor-plugin" / "plugin.json").read_text()
+                )
+                skill_root = package / manifest["skills"]
+                skill = skill_root / plugin["id"]
+
+                self.assertTrue(skill.is_dir())
+                self.assertFalse(skill.is_symlink())
+                self.assertEqual(generator.validate_skill(skill), [])
+                canonical = ROOT / Path(plugin["capability"]["canonical_path"]).parent
+                self.assertEqual(generator._tree_files(skill), generator._tree_files(canonical))
+
 
 if __name__ == "__main__":
     unittest.main()

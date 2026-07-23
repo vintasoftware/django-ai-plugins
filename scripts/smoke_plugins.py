@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections import defaultdict
@@ -49,10 +50,10 @@ def discover_capabilities(package: Path, target: str) -> list[dict[str, Any]]:
                     "target": target,
                 }
             )
-    elif target == "codex":
+    elif target in {"codex", "cursor"}:
         skill_root_value = manifest.get("skills")
         if not isinstance(skill_root_value, str):
-            raise SmokeFailure(f"{package}: Codex manifest has no skills path")
+            raise SmokeFailure(f"{package}: {target} manifest has no skills path")
         skill_root = package / skill_root_value
         for path in sorted(skill_root.glob("*/SKILL.md")):
             capabilities.append(
@@ -113,11 +114,88 @@ def find_duplicates(
     }
 
 
+def _smoke_opencode(
+    root: Path, home: Path, catalog: dict[str, Any]
+) -> list[dict[str, Any]]:
+    checkout = home / "checkout"
+    shutil.copytree(root / ".opencode", checkout / ".opencode")
+    shutil.copytree(root / "skills", checkout / "skills")
+    shutil.copy2(root / "package.json", checkout / "package.json")
+    adapter = checkout / ".opencode" / "plugins" / "django-ai-skills.js"
+    script = (
+        f"import plugin from {json.dumps(adapter.as_uri())};"
+        "const hooks = await plugin();"
+        "const config = {};"
+        "await hooks.config(config);"
+        "await hooks.config(config);"
+        "process.stdout.write(JSON.stringify({"
+        "hooks: Object.keys(hooks), paths: config.skills.paths"
+        "}));"
+    )
+    completed = subprocess.run(
+        ["node", "--input-type=module", "--eval", script],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode:
+        raise SmokeFailure(
+            f"OpenCode adapter failed to load: {completed.stderr.strip()}"
+        )
+    loaded = json.loads(completed.stdout)
+    paths = loaded.get("paths", [])
+    registered_path = Path(paths[0]).resolve() if len(paths) == 1 else None
+    if (
+        loaded.get("hooks") != ["config"]
+        or registered_path != (checkout / "skills").resolve()
+    ):
+        raise SmokeFailure(
+            "OpenCode adapter must register only the copied canonical skills path"
+        )
+    return [
+        {
+            "plugin": plugin["id"],
+            "status": "ok",
+            "installed_root": checkout,
+            "capability": plugin["id"],
+            "provenance": "opencode-plugin",
+        }
+        for plugin in catalog["plugins"]
+    ]
+
+
+def _smoke_agent_skills(
+    root: Path, home: Path, catalog: dict[str, Any]
+) -> list[dict[str, Any]]:
+    skills_home = home / "skills"
+    shutil.copytree(root / "skills", skills_home)
+    expected = sorted(plugin["id"] for plugin in catalog["plugins"])
+    discovered = sorted(path.parent.name for path in skills_home.glob("*/SKILL.md"))
+    if discovered != expected:
+        raise SmokeFailure(
+            f"generic Agent Skills IDs differ: expected {expected}, found {discovered}"
+        )
+    return [
+        {
+            "plugin": plugin_id,
+            "status": "ok",
+            "installed_root": skills_home,
+            "capability": plugin_id,
+            "provenance": "direct-agent-skill",
+        }
+        for plugin_id in discovered
+    ]
+
+
 def smoke_repository(root: Path, target: str) -> list[dict[str, Any]]:
     catalog = _load_catalog(root)
     results: list[dict[str, Any]] = []
     with tempfile.TemporaryDirectory(prefix=f"django-ai-{target}-", dir="/tmp") as temporary:
         home = Path(temporary)
+        if target == "opencode":
+            return _smoke_opencode(root, home, catalog)
+        if target == "agent-skills":
+            return _smoke_agent_skills(root, home, catalog)
         for plugin in catalog["plugins"]:
             installed = install_package(root, home, plugin["id"])
             capabilities = discover_capabilities(installed, target)
@@ -136,7 +214,11 @@ def smoke_repository(root: Path, target: str) -> list[dict[str, Any]]:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--target", choices=("claude", "codex"), required=True)
+    parser.add_argument(
+        "--target",
+        choices=("claude", "codex", "cursor", "opencode", "agent-skills"),
+        required=True,
+    )
     return parser.parse_args(argv)
 
 

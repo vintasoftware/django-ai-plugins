@@ -25,18 +25,20 @@ class NativeDistributionTests(unittest.TestCase):
     def load_catalog(self):
         return json.loads((ROOT / "plugins" / "catalog.json").read_text())
 
-    def test_native_marketplaces_have_the_same_five_stable_ids(self):
+    def test_marketplaces_have_the_same_five_stable_ids(self):
         expected = [plugin["id"] for plugin in self.load_catalog()["plugins"]]
         claude = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text())
         codex = json.loads((ROOT / ".agents" / "plugins" / "marketplace.json").read_text())
+        cursor = json.loads((ROOT / ".cursor-plugin" / "marketplace.json").read_text())
 
         self.assertEqual([plugin["name"] for plugin in claude["plugins"]], expected)
         self.assertEqual([plugin["name"] for plugin in codex["plugins"]], expected)
+        self.assertEqual([plugin["name"] for plugin in cursor["plugins"]], expected)
 
     def test_native_manifests_match_catalog_and_expose_one_host_surface(self):
         for plugin in self.load_catalog()["plugins"]:
             package = ROOT / plugin["package"]
-            for target in ("claude", "codex"):
+            for target in ("claude", "codex", "cursor"):
                 with self.subTest(plugin=plugin["id"], target=target):
                     manifest = json.loads(
                         (
@@ -52,8 +54,8 @@ class NativeDistributionTests(unittest.TestCase):
                     self.assertEqual(len(capabilities), 1)
                     self.assertTrue(capabilities[0]["path"].is_file())
 
-    def test_isolated_native_smoke_never_uses_real_user_homes(self):
-        for target in ("claude", "codex"):
+    def test_isolated_smoke_never_uses_real_user_homes(self):
+        for target in ("claude", "codex", "cursor", "opencode", "agent-skills"):
             with self.subTest(target=target):
                 results = smoke.smoke_repository(ROOT, target)
 
@@ -146,8 +148,35 @@ class NativeDistributionTests(unittest.TestCase):
                 "plugins/cdrf-expert/.codex-plugin/plugin.json",
                 stale,
             )
+            self.assertIn(
+                "plugins/cdrf-expert/.cursor-plugin/plugin.json",
+                stale,
+            )
             generator.generate_adapters(root)
             self.assertEqual(generator.generate_adapters(root, check=True), [])
+
+    def test_opencode_adapter_registers_only_the_canonical_skills_path(self):
+        results = smoke.smoke_repository(ROOT, "opencode")
+
+        self.assertEqual(len(results), 5)
+        self.assertTrue(all(result["provenance"] == "opencode-plugin" for result in results))
+
+    def test_repository_package_is_private_dependency_free_esm(self):
+        package = json.loads((ROOT / "package.json").read_text())
+
+        self.assertTrue(package["private"])
+        self.assertEqual(package["type"], "module")
+        self.assertNotIn("dependencies", package)
+        self.assertNotIn("devDependencies", package)
+        self.assertNotIn("scripts", package)
+
+    def test_generic_agent_skills_are_the_five_canonical_directories(self):
+        expected = [plugin["id"] for plugin in self.load_catalog()["plugins"]]
+        discovered = sorted(path.parent.name for path in (ROOT / "skills").glob("*/SKILL.md"))
+
+        self.assertEqual(discovered, sorted(expected))
+        for skill_id in discovered:
+            self.assertEqual(generator.validate_skill(ROOT / "skills" / skill_id), [])
 
 
 if __name__ == "__main__":

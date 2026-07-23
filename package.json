@@ -1,0 +1,8 @@
+{
+  "name": "django-ai-skills",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./opencode": "./.opencode/plugins/django-ai-skills.js"
+  }
+}
