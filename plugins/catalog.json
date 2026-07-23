@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/vintasoftware/django-ai-plugins",
+  "defaults": {
+    "author": {
+      "name": "Vinta Software",
+      "url": "https://www.vinta.com.br/"
+    },
+    "homepage": "https://github.com/vintasoftware/django-ai-plugins",
+    "license": "MIT",
+    "category": "Developer Tools"
+  },
+  "marketplaces": {
+    "claude": {
+      "name": "django-ai-plugins",
+      "display_name": "Django AI Plugins"
+    },
+    "codex": {
+      "name": "vinta-django-ai-plugin",
+      "display_name": "Vinta Django AI"
+    },
+    "cursor": {
+      "name": "django-ai-plugins",
+      "display_name": "Django AI Plugins"
+    }
+  },
+  "plugins": [
+    {
+      "id": "django-expert",
+      "version": "1.0.0",
+      "description": "Comprehensive Django backend development guidelines and best practices. Expert guidance for models, views, templates, DRF, testing, and deployment.",
+      "package": "plugins/django-expert",
+      "capability": {
+        "kind": "skill",
+        "package_path": "skills/SKILL.md"
+      },
+      "hosts": [
+        "claude",
+        "codex",
+        "cursor",
+        "opencode",
+        "agent-skills"
+      ],
+      "keywords": [
+        "django",
+        "backend",
+        "drf",
+        "python"
+      ],
+      "interface": {
+        "display_name": "Django Expert",
+        "short_description": "Django backend guidance.",
+        "long_description": "Expert Django backend development guidance covering models, views, DRF, testing, security, performance, and deployment.",
+        "default_prompts": [
+          "Create a Django model for user profiles.",
+          "Build a DRF endpoint with filtering and pagination.",
+          "Review this queryset for N+1 issues."
+        ]
+      }
+    },
+    {
+      "id": "django-celery-expert",
+      "version": "1.0.0",
+      "description": "Django and Celery best practices for asynchronous task processing. Expert guidance for task design, worker configuration, monitoring, error handling, and production deployment.",
+      "package": "plugins/django-celery-expert",
+      "capability": {
+        "kind": "skill",
+        "package_path": "skills/SKILL.md"
+      },
+      "hosts": [
+        "claude",
+        "codex",
+        "cursor",
+        "opencode",
+        "agent-skills"
+      ],
+      "keywords": [
+        "django",
+        "celery",
+        "async",
+        "tasks"
+      ],
+      "interface": {
+        "display_name": "Django Celery Expert",
+        "short_description": "Celery patterns for Django.",
+        "long_description": "Expert guidance for background task design, worker configuration, retries, scheduling, observability, and production Celery deployments in Django projects.",
+        "default_prompts": [
+          "Create a Celery task with retry and backoff.",
+          "Set up Celery Beat for scheduled reports.",
+          "Review this task for idempotency risks."
+        ]
+      }
+    },
+    {
+      "id": "cdrf-expert",
+      "version": "1.0.0",
+      "description": "Expert guidance for Django REST Framework class-based views using Classy DRF (cdrf.co). Helps choose the right DRF generic/viewset class and override methods safely.",
+      "package": "plugins/cdrf-expert",
+      "capability": {
+        "kind": "skill",
+        "package_path": "skills/SKILL.md"
+      },
+      "hosts": [
+        "claude",
+        "codex",
+        "cursor",
+        "opencode",
+        "agent-skills"
+      ],
+      "keywords": [
+        "django-rest-framework",
+        "drf",
+        "cdrf",
+        "api"
+      ],
+      "interface": {
+        "display_name": "CDRF Expert",
+        "short_description": "DRF class and override guidance.",
+        "long_description": "Helps choose the correct Django REST Framework class-based view, trace request lifecycle and MRO, and select the safest override hook.",
+        "default_prompts": [
+          "Should this be APIView or ModelViewSet?",
+          "Which hook should I override: create or perform_create?",
+          "Trace this DRF method through the MRO."
+        ]
+      }
+    },
+    {
+      "id": "django-safe-migration",
+      "version": "1.0.0",
+      "description": "Write, review, and rewrite Django migrations for PostgreSQL with zero-downtime guarantees. Covers two-file splits, AddIndexConcurrently, FK NOT VALID + VALIDATE, db_default for NOT NULL columns, and RunPython safety rules.",
+      "package": "plugins/django-safe-migration",
+      "capability": {
+        "kind": "skill",
+        "package_path": "skills/django-safe-migration/SKILL.md"
+      },
+      "hosts": [
+        "claude",
+        "codex",
+        "cursor",
+        "opencode",
+        "agent-skills"
+      ],
+      "keywords": [
+        "django",
+        "migrations",
+        "postgresql",
+        "zero-downtime"
+      ],
+      "interface": {
+        "display_name": "Django Safe Migration",
+        "short_description": "Zero-downtime Django migrations.",
+        "long_description": "Guidance for writing, reviewing, and rewriting Django migrations for PostgreSQL rolling deploys.",
+        "default_prompts": [
+          "Review this migration for zero-downtime safety."
+        ]
+      },
+      "overrides": {
+        "codex": {
+          "website_url": "https://github.com/vintasoftware/django-safe-migration-plugin",
+          "privacy_policy_url": "https://www.vinta.com.br/privacy-policy",
+          "terms_of_service_url": "https://github.com/vintasoftware/django-safe-migration-plugin/blob/main/LICENSE"
+        }
+      }
+    },
+    {
+      "id": "django-reviewer",
+      "version": "1.0.0",
+      "description": "Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Applies Django best practices, PEP 8, and project standards.",
+      "package": "plugins/django-reviewer",
+      "capability": {
+        "kind": "hybrid",
+        "package_path": "agents/django-reviewer.md"
+      },
+      "hosts": [
+        "claude",
+        "codex",
+        "cursor",
+        "opencode",
+        "agent-skills"
+      ],
+      "keywords": [
+        "django",
+        "code-review",
+        "python",
+        "agent"
+      ],
+      "interface": {
+        "display_name": "Django Reviewer",
+        "short_description": "Django and Python code review.",
+        "long_description": "Code review focused on Django and Python clarity, consistency, maintainability, and common ORM or DRF anti-patterns.",
+        "default_prompts": [
+          "Review my recent Django changes for anti-patterns.",
+          "Check this queryset for performance regressions.",
+          "Refine this serializer without changing behavior."
+        ]
+      }
+    }
+  ]
+}
