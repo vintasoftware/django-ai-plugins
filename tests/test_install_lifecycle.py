@@ -58,13 +58,31 @@ class NativeDistributionTests(unittest.TestCase):
     def test_isolated_smoke_never_uses_real_user_homes(self):
         for target in ("claude", "codex", "cursor", "opencode", "agent-skills"):
             with self.subTest(target=target):
-                results = smoke.smoke_repository(ROOT, target)
+                with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
+                    home = Path(temporary)
+                    results = smoke.smoke_repository(ROOT, target, home)
 
-                self.assertEqual(len(results), 5)
-                self.assertTrue(all(result["status"] == "ok" for result in results))
-                self.assertTrue(
-                    all(str(result["installed_root"]).startswith("/tmp/") for result in results)
-                )
+                    self.assertEqual(len(results), 5)
+                    self.assertTrue(
+                        all(result["status"] == "ok" for result in results)
+                    )
+                    if target == "opencode":
+                        self.assertTrue((home / "checkout" / "skills").is_dir())
+                        self.assertTrue(
+                            all(
+                                result["provenance"] == "opencode-plugin"
+                                for result in results
+                            )
+                        )
+                    elif target == "agent-skills":
+                        self.assertTrue((home / "skills").is_dir())
+                    else:
+                        self.assertTrue(
+                            all(
+                                (home / "plugins" / result["plugin"]).is_dir()
+                                for result in results
+                            )
+                        )
 
     def test_install_update_and_uninstall_preserve_other_plugins(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -156,12 +174,6 @@ class NativeDistributionTests(unittest.TestCase):
             generator.generate_adapters(root)
             self.assertEqual(generator.generate_adapters(root, check=True), [])
 
-    def test_opencode_adapter_registers_only_the_canonical_skills_path(self):
-        results = smoke.smoke_repository(ROOT, "opencode")
-
-        self.assertEqual(len(results), 5)
-        self.assertTrue(all(result["provenance"] == "opencode-plugin" for result in results))
-
     def test_repository_package_is_private_dependency_free_esm(self):
         package = json.loads((ROOT / "package.json").read_text())
 
@@ -170,6 +182,15 @@ class NativeDistributionTests(unittest.TestCase):
         self.assertNotIn("dependencies", package)
         self.assertNotIn("devDependencies", package)
         self.assertNotIn("scripts", package)
+
+    def test_collection_version_uses_semantic_not_lexicographic_order(self):
+        versions = ["1.9.0", "1.10.0", "2.0.0"]
+
+        self.assertEqual(max(versions, key=generator._semver_key), "2.0.0")
+        self.assertEqual(
+            max(versions[:2], key=generator._semver_key),
+            "1.10.0",
+        )
 
     def test_generic_agent_skills_are_the_five_canonical_directories(self):
         expected = [plugin["id"] for plugin in self.load_catalog()["plugins"]]

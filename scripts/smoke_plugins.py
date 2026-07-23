@@ -33,37 +33,25 @@ def _manifest(package: Path, target: str) -> dict[str, Any]:
         raise SmokeFailure(f"{path}: invalid or missing manifest") from error
 
 
+def _discover_skills(skill_root: Path) -> list[dict[str, Any]]:
+    return [
+        {"id": path.parent.name, "path": path}
+        for path in sorted(skill_root.glob("*/SKILL.md"))
+    ]
+
+
 def discover_capabilities(package: Path, target: str) -> list[dict[str, Any]]:
     manifest = _manifest(package, target)
     capabilities: list[dict[str, Any]] = []
     if target == "claude":
         for path in sorted((package / "agents").glob("*.md")):
-            capabilities.append(
-                {"id": path.stem, "kind": "agent", "path": path, "target": target}
-            )
-        for path in sorted((package / "skills").glob("*/SKILL.md")):
-            capabilities.append(
-                {
-                    "id": path.parent.name,
-                    "kind": "skill",
-                    "path": path,
-                    "target": target,
-                }
-            )
+            capabilities.append({"id": path.stem, "path": path})
+        capabilities.extend(_discover_skills(package / "skills"))
     elif target in {"codex", "cursor"}:
         skill_root_value = manifest.get("skills")
         if not isinstance(skill_root_value, str):
             raise SmokeFailure(f"{package}: {target} manifest has no skills path")
-        skill_root = package / skill_root_value
-        for path in sorted(skill_root.glob("*/SKILL.md")):
-            capabilities.append(
-                {
-                    "id": path.parent.name,
-                    "kind": "skill",
-                    "path": path,
-                    "target": target,
-                }
-            )
+        capabilities.extend(_discover_skills(package / skill_root_value))
     else:
         raise SmokeFailure(f"unsupported smoke target '{target}'")
 
@@ -156,7 +144,6 @@ def _smoke_opencode(
         {
             "plugin": plugin["id"],
             "status": "ok",
-            "installed_root": checkout,
             "capability": plugin["id"],
             "provenance": "opencode-plugin",
         }
@@ -179,7 +166,6 @@ def _smoke_agent_skills(
         {
             "plugin": plugin_id,
             "status": "ok",
-            "installed_root": skills_home,
             "capability": plugin_id,
             "provenance": "direct-agent-skill",
         }
@@ -187,29 +173,38 @@ def _smoke_agent_skills(
     ]
 
 
-def smoke_repository(root: Path, target: str) -> list[dict[str, Any]]:
+def _smoke_in_home(
+    root: Path, target: str, home: Path
+) -> list[dict[str, Any]]:
     catalog = _load_catalog(root)
+    if target == "opencode":
+        return _smoke_opencode(root, home, catalog)
+    if target == "agent-skills":
+        return _smoke_agent_skills(root, home, catalog)
     results: list[dict[str, Any]] = []
-    with tempfile.TemporaryDirectory(prefix=f"django-ai-{target}-", dir="/tmp") as temporary:
-        home = Path(temporary)
-        if target == "opencode":
-            return _smoke_opencode(root, home, catalog)
-        if target == "agent-skills":
-            return _smoke_agent_skills(root, home, catalog)
-        for plugin in catalog["plugins"]:
-            installed = install_package(root, home, plugin["id"])
-            capabilities = discover_capabilities(installed, target)
-            results.append(
-                {
-                    "plugin": plugin["id"],
-                    "status": "ok",
-                    "installed_root": installed,
-                    "capability": capabilities[0]["id"],
-                    "provenance": f"{target}-marketplace",
-                }
-            )
-            uninstall_package(home, plugin["id"])
+    for plugin in catalog["plugins"]:
+        installed = install_package(root, home, plugin["id"])
+        capabilities = discover_capabilities(installed, target)
+        results.append(
+            {
+                "plugin": plugin["id"],
+                "status": "ok",
+                "capability": capabilities[0]["id"],
+                "provenance": f"{target}-marketplace",
+            }
+        )
     return results
+
+
+def smoke_repository(
+    root: Path, target: str, home: Path | None = None
+) -> list[dict[str, Any]]:
+    if home is not None:
+        return _smoke_in_home(root, target, home)
+    with tempfile.TemporaryDirectory(
+        prefix=f"django-ai-{target}-", dir="/tmp"
+    ) as temporary:
+        return _smoke_in_home(root, target, Path(temporary))
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

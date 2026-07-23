@@ -105,11 +105,13 @@ def validate_catalog(catalog: dict[str, Any], root: Path = ROOT) -> list[str]:
         package_value = plugin.get("package")
         package_relative = _safe_relative_path(package_value)
         package_root: Path | None = None
+        package_exists = False
         if package_relative is None:
             errors.append(f"{label} has unsafe package path '{package_value}'")
         else:
             package_root = root.joinpath(*package_relative.parts)
-            if not package_root.is_dir():
+            package_exists = package_root.is_dir()
+            if not package_exists:
                 errors.append(f"{label} references unknown package root '{package_value}'")
 
         capability = plugin.get("capability")
@@ -123,7 +125,7 @@ def validate_catalog(catalog: dict[str, Any], root: Path = ROOT) -> list[str]:
             surface_relative = _safe_relative_path(surface_value)
             if surface_relative is None:
                 errors.append(f"{label} has unsafe capability path '{surface_value}'")
-            elif package_root is not None and package_root.is_dir():
+            elif package_root is not None and package_exists:
                 surface = package_root.joinpath(*surface_relative.parts)
                 if surface.is_symlink() or not surface.is_file():
                     errors.append(

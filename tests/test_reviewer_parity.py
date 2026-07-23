@@ -29,20 +29,6 @@ generator = load_generator()
 
 
 class ReviewerParityTests(unittest.TestCase):
-    def test_current_agent_characterization(self):
-        content = AGENT.read_text()
-
-        for contract in (
-            "Preserve Functionality",
-            "Apply Project Standards",
-            "Focus Scope",
-            "recently modified",
-            "select_related",
-            "without changing behavior",
-        ):
-            with self.subTest(contract=contract):
-                self.assertIn(contract, content)
-
     def test_canonical_skill_and_claude_agent_share_review_contract(self):
         canonical = CANONICAL.read_text()
         agent = AGENT.read_text()

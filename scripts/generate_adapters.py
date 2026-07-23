@@ -32,8 +32,7 @@ class GenerationFailure(RuntimeError):
     """Raised when canonical inputs cannot safely produce adapters."""
 
 
-def _parse_frontmatter(skill_file: Path) -> dict[str, str]:
-    content = skill_file.read_text()
+def _parse_frontmatter(skill_file: Path, content: str) -> dict[str, str]:
     lines = content.splitlines()
     if not lines or lines[0] != "---":
         raise GenerationFailure(f"{skill_file}: missing YAML frontmatter")
@@ -88,7 +87,7 @@ def _case_mismatch(path: Path) -> bool:
     return False
 
 
-def validate_skill(skill_directory: Path) -> list[str]:
+def validate_skill(skill_directory: Path, content: str | None = None) -> list[str]:
     errors: list[str] = []
     if skill_directory.is_symlink():
         return [f"{skill_directory}: symlink skill directories are not allowed"]
@@ -96,6 +95,8 @@ def validate_skill(skill_directory: Path) -> list[str]:
     skill_file = skill_directory / "SKILL.md"
     if not skill_file.is_file():
         return [f"{skill_directory}: missing SKILL.md"]
+    if content is None:
+        content = skill_file.read_text()
 
     for directory, directory_names, file_names in os.walk(
         skill_directory, followlinks=False
@@ -107,7 +108,7 @@ def validate_skill(skill_directory: Path) -> list[str]:
                 errors.append(f"{candidate}: symlink inputs are not allowed")
 
     try:
-        frontmatter = _parse_frontmatter(skill_file)
+        frontmatter = _parse_frontmatter(skill_file, content)
     except GenerationFailure as error:
         return errors + [str(error)]
 
@@ -127,7 +128,7 @@ def validate_skill(skill_directory: Path) -> list[str]:
     for field in sorted(HOST_ONLY_FRONTMATTER & frontmatter.keys()):
         errors.append(f"{skill_file}: host-only frontmatter '{field}' is not portable")
 
-    for reference in sorted(_referenced_paths(skill_file.read_text())):
+    for reference in sorted(_referenced_paths(content)):
         pure_reference = PurePosixPath(reference)
         if pure_reference.is_absolute() or reference.startswith("~"):
             errors.append(f"{skill_file}: absolute reference '{reference}' is not allowed")
@@ -153,14 +154,13 @@ def _tree_files(directory: Path) -> dict[str, bytes]:
     }
 
 
-def _skill_body(skill_file: Path) -> str:
-    content = skill_file.read_text()
+def _skill_body(content: str) -> str:
     lines = content.splitlines()
     end = lines.index("---", 1)
     return "\n".join(lines[end + 1 :]).lstrip() + "\n"
 
 
-def _render_claude_agent(plugin: dict[str, Any], source: Path) -> str | None:
+def _render_claude_agent(plugin: dict[str, Any], content: str) -> str | None:
     claude = plugin.get("overrides", {}).get("claude", {})
     if not claude.get("agent_path"):
         return None
@@ -173,12 +173,17 @@ def _render_claude_agent(plugin: dict[str, Any], source: Path) -> str | None:
         f"model: {model}\n"
         "---\n\n"
         "<!-- Generated from the canonical reviewer skill. Do not edit directly. -->\n\n"
-        f"{_skill_body(source / 'SKILL.md')}"
+        f"{_skill_body(content)}"
     )
 
 
 def _json_text(value: dict[str, Any]) -> str:
     return json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+
+
+def _semver_key(version: str) -> tuple[int, int, int]:
+    major, minor, patch = version.split(".")
+    return int(major), int(minor), int(patch)
 
 
 def _interface(plugin: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
@@ -209,11 +214,11 @@ def _interface(plugin: dict[str, Any], defaults: dict[str, Any]) -> dict[str, An
 
 def _native_outputs(
     catalog: dict[str, Any], root: Path
-) -> list[tuple[str, str, Path]]:
+) -> list[tuple[str, Path]]:
     if not catalog.get("marketplaces") or not catalog.get("defaults"):
         return []
     defaults = catalog["defaults"]
-    outputs: list[tuple[str, str, Path]] = []
+    outputs: list[tuple[str, Path]] = []
     claude_plugins: list[dict[str, Any]] = []
     codex_plugins: list[dict[str, Any]] = []
     cursor_plugins: list[dict[str, Any]] = []
@@ -222,6 +227,11 @@ def _native_outputs(
     for plugin in catalog["plugins"]:
         versions.append(plugin["version"])
         package = root / plugin["package"]
+        skill_root = (
+            "./portable-skills/"
+            if plugin["capability"]["kind"] == "hybrid"
+            else "./skills/"
+        )
         claude_manifest = {
             "name": plugin["id"],
             "version": plugin["version"],
@@ -234,11 +244,7 @@ def _native_outputs(
         }
         codex_manifest = {
             **claude_manifest,
-            "skills": (
-                "./portable-skills/"
-                if plugin["capability"]["kind"] == "hybrid"
-                else "./skills/"
-            ),
+            "skills": skill_root,
             "interface": _interface(plugin, defaults),
         }
         cursor_manifest = {
@@ -252,26 +258,19 @@ def _native_outputs(
             "license": defaults["license"],
             "keywords": plugin["keywords"],
             "category": defaults["category"],
-            "skills": (
-                "./portable-skills/"
-                if plugin["capability"]["kind"] == "hybrid"
-                else "./skills/"
-            ),
+            "skills": skill_root,
         }
         outputs.extend(
             (
                 (
-                    plugin["id"],
                     _json_text(claude_manifest),
                     package / ".claude-plugin" / "plugin.json",
                 ),
                 (
-                    plugin["id"],
                     _json_text(codex_manifest),
                     package / ".codex-plugin" / "plugin.json",
                 ),
                 (
-                    plugin["id"],
                     _json_text(cursor_manifest),
                     package / ".cursor-plugin" / "plugin.json",
                 ),
@@ -307,11 +306,10 @@ def _native_outputs(
             }
         )
 
-    collection_version = max(versions)
+    collection_version = max(versions, key=_semver_key)
     outputs.extend(
         (
             (
-                "claude-marketplace",
                 _json_text(
                     {
                         "name": catalog["marketplaces"]["claude"]["name"],
@@ -324,7 +322,6 @@ def _native_outputs(
                 root / ".claude-plugin" / "marketplace.json",
             ),
             (
-                "codex-marketplace",
                 _json_text(
                     {
                         "name": catalog["marketplaces"]["codex"]["name"],
@@ -339,7 +336,6 @@ def _native_outputs(
                 root / ".agents" / "plugins" / "marketplace.json",
             ),
             (
-                "cursor-marketplace",
                 _json_text(
                     {
                         "name": catalog["marketplaces"]["cursor"]["name"],
@@ -391,7 +387,7 @@ def _replace_directory(staged: Path, target: Path) -> None:
     token = uuid.uuid4().hex
     replacement = target.parent / f".{target.name}.new-{token}"
     backup = target.parent / f".{target.name}.old-{token}"
-    shutil.copytree(staged, replacement)
+    os.replace(staged, replacement)
     had_target = target.exists()
     try:
         if had_target:
@@ -482,7 +478,7 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
     root = root.resolve()
     catalog = _load_catalog(root)
     projections: list[tuple[dict[str, Any], Path, Path]] = []
-    generated_files: list[tuple[str, str, Path]] = []
+    generated_files: list[tuple[str, Path]] = []
     validation_errors: list[str] = []
     for plugin in catalog.get("plugins", []):
         if not isinstance(plugin, dict):
@@ -491,15 +487,15 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
         if projection is None:
             continue
         source, target = projection
-        errors = validate_skill(source)
+        source_content = (source / "SKILL.md").read_text()
+        errors = validate_skill(source, source_content)
         validation_errors.extend(errors)
         projections.append((plugin, source, target))
-        agent_content = _render_claude_agent(plugin, source)
+        agent_content = _render_claude_agent(plugin, source_content)
         agent_path = plugin.get("overrides", {}).get("claude", {}).get("agent_path")
         if agent_content is not None and agent_path:
             generated_files.append(
                 (
-                    plugin["id"],
                     agent_content,
                     root / plugin["package"] / agent_path,
                 )
@@ -522,7 +518,7 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
             relative_target = str(target_directory.relative_to(root))
             if relative_target not in changed:
                 changed.append(relative_target)
-    for _, content, target in generated_files:
+    for content, target in generated_files:
         if not target.is_file() or target.read_text() != content:
             changed.append(str(target.relative_to(root)))
     changed.extend(str(path.relative_to(root)) for path in orphan_paths)
@@ -535,17 +531,19 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
         stage_root = Path(temporary)
         staged: list[tuple[dict[str, Any], Path, Path]] = []
         for plugin, source, target in projections:
+            if str(target.relative_to(root)) not in changed:
+                continue
             stage = stage_root / plugin["id"]
             shutil.copytree(source, stage)
             staged.append((plugin, stage, target))
 
-        for plugin, stage, target in staged:
-            if str(target.relative_to(root)) in changed:
-                _replace_directory(stage, target)
+        for _, stage, target in staged:
+            _replace_directory(stage, target)
+        for plugin, _, _ in projections:
             _remove_legacy_projection(plugin, root)
         for path in orphan_paths:
             _remove_generated_path(path)
-        for _, content, target in generated_files:
+        for content, target in generated_files:
             if str(target.relative_to(root)) in changed:
                 _replace_file(content, target)
     return changed
