@@ -32,7 +32,9 @@
       "package": "plugins/django-expert",
       "capability": {
         "kind": "skill",
-        "package_path": "skills/SKILL.md"
+        "canonical_path": "skills/django-expert/SKILL.md",
+        "package_path": "skills/django-expert/SKILL.md",
+        "legacy_package_path": "skills/SKILL.md"
       },
       "hosts": [
         "claude",
@@ -65,7 +67,9 @@
       "package": "plugins/django-celery-expert",
       "capability": {
         "kind": "skill",
-        "package_path": "skills/SKILL.md"
+        "canonical_path": "skills/django-celery-expert/SKILL.md",
+        "package_path": "skills/django-celery-expert/SKILL.md",
+        "legacy_package_path": "skills/SKILL.md"
       },
       "hosts": [
         "claude",
@@ -98,7 +102,9 @@
       "package": "plugins/cdrf-expert",
       "capability": {
         "kind": "skill",
-        "package_path": "skills/SKILL.md"
+        "canonical_path": "skills/cdrf-expert/SKILL.md",
+        "package_path": "skills/cdrf-expert/SKILL.md",
+        "legacy_package_path": "skills/SKILL.md"
       },
       "hosts": [
         "claude",
@@ -131,6 +137,7 @@
       "package": "plugins/django-safe-migration",
       "capability": {
         "kind": "skill",
+        "canonical_path": "skills/django-safe-migration/SKILL.md",
         "package_path": "skills/django-safe-migration/SKILL.md"
       },
       "hosts": [
