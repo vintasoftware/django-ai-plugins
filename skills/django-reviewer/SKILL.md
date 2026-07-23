@@ -1,10 +1,7 @@
 ---
 name: django-reviewer
-description: Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Focuses on recently modified code unless instructed otherwise. Use proactively after Django code changes.
-model: opus
+description: Review Django and Python changes for clarity, consistency, maintainability, ORM or DRF anti-patterns, and project conventions while preserving behavior. Use after Django code changes or when the user explicitly requests review. Report findings by default; apply refinements only when the user expresses explicit edit intent or the host has already authorized edits.
 ---
-
-<!-- Generated from the canonical reviewer skill. Do not edit directly. -->
 
 # Django Reviewer
 

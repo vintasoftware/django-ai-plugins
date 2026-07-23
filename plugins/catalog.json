@@ -176,7 +176,8 @@
       "package": "plugins/django-reviewer",
       "capability": {
         "kind": "hybrid",
-        "package_path": "agents/django-reviewer.md"
+        "canonical_path": "skills/django-reviewer/SKILL.md",
+        "package_path": "portable-skills/django-reviewer/SKILL.md"
       },
       "hosts": [
         "claude",
@@ -200,6 +201,13 @@
           "Check this queryset for performance regressions.",
           "Refine this serializer without changing behavior."
         ]
+      },
+      "overrides": {
+        "claude": {
+          "agent_path": "agents/django-reviewer.md",
+          "model": "opus",
+          "description": "Reviews and refines Django/Python code for clarity, consistency, and maintainability while preserving all functionality. Focuses on recently modified code unless instructed otherwise. Use proactively after Django code changes."
+        }
       }
     }
   ]

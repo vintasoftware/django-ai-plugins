@@ -153,6 +153,30 @@ def _tree_files(directory: Path) -> dict[str, bytes]:
     }
 
 
+def _skill_body(skill_file: Path) -> str:
+    content = skill_file.read_text()
+    lines = content.splitlines()
+    end = lines.index("---", 1)
+    return "\n".join(lines[end + 1 :]).lstrip() + "\n"
+
+
+def _render_claude_agent(plugin: dict[str, Any], source: Path) -> str | None:
+    claude = plugin.get("overrides", {}).get("claude", {})
+    if not claude.get("agent_path"):
+        return None
+    description = claude.get("description", plugin.get("description", ""))
+    model = claude.get("model", "inherit")
+    return (
+        "---\n"
+        f"name: {plugin['id']}\n"
+        f"description: {description}\n"
+        f"model: {model}\n"
+        "---\n\n"
+        "<!-- Generated from the canonical reviewer skill. Do not edit directly. -->\n\n"
+        f"{_skill_body(source / 'SKILL.md')}"
+    )
+
+
 def _load_catalog(root: Path) -> dict[str, Any]:
     path = root / CATALOG_PATH
     try:
@@ -201,6 +225,13 @@ def _replace_directory(staged: Path, target: Path) -> None:
             shutil.rmtree(backup)
 
 
+def _replace_file(content: str, target: Path) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.parent / f".{target.name}.new-{uuid.uuid4().hex}"
+    temporary.write_text(content)
+    os.replace(temporary, target)
+
+
 def _remove_legacy_projection(plugin: dict[str, Any], root: Path) -> None:
     capability = plugin["capability"]
     legacy_value = capability.get("legacy_package_path")
@@ -218,6 +249,7 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
     root = root.resolve()
     catalog = _load_catalog(root)
     projections: list[tuple[dict[str, Any], Path, Path]] = []
+    generated_files: list[tuple[str, str, Path]] = []
     validation_errors: list[str] = []
     for plugin in catalog.get("plugins", []):
         if not isinstance(plugin, dict):
@@ -229,6 +261,16 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
         errors = validate_skill(source)
         validation_errors.extend(errors)
         projections.append((plugin, source, target))
+        agent_content = _render_claude_agent(plugin, source)
+        agent_path = plugin.get("overrides", {}).get("claude", {}).get("agent_path")
+        if agent_content is not None and agent_path:
+            generated_files.append(
+                (
+                    plugin["id"],
+                    agent_content,
+                    root / plugin["package"] / agent_path,
+                )
+            )
     if validation_errors:
         raise GenerationFailure("\n".join(validation_errors))
 
@@ -245,6 +287,9 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
             relative_target = str(target_directory.relative_to(root))
             if relative_target not in changed:
                 changed.append(relative_target)
+    for _, content, target in generated_files:
+        if not target.is_file() or target.read_text() != content:
+            changed.append(str(target.relative_to(root)))
 
     changed.sort()
     if check or not changed:
@@ -262,6 +307,9 @@ def generate_adapters(root: Path = ROOT, check: bool = False) -> list[str]:
             if str(target.relative_to(root)) in changed:
                 _replace_directory(stage, target)
             _remove_legacy_projection(plugin, root)
+        for _, content, target in generated_files:
+            if str(target.relative_to(root)) in changed:
+                _replace_file(content, target)
     return changed
 
 
