@@ -5,6 +5,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -85,14 +86,17 @@ class NativeDistributionTests(unittest.TestCase):
                         )
 
     def test_install_update_and_uninstall_preserve_other_plugins(self):
+        plugins = {
+            plugin["id"]: plugin for plugin in self.load_catalog()["plugins"]
+        }
         with tempfile.TemporaryDirectory() as temporary_directory:
             home = Path(temporary_directory)
-            first = smoke.install_package(ROOT, home, "django-expert")
-            second = smoke.install_package(ROOT, home, "cdrf-expert")
+            first = smoke.install_package(ROOT, home, plugins["django-expert"])
+            second = smoke.install_package(ROOT, home, plugins["cdrf-expert"])
             marker = first / "local-marker"
             marker.write_text("stale")
 
-            updated = smoke.install_package(ROOT, home, "django-expert")
+            updated = smoke.install_package(ROOT, home, plugins["django-expert"])
 
             self.assertFalse((updated / "local-marker").exists())
             self.assertTrue(second.is_dir())
@@ -101,24 +105,78 @@ class NativeDistributionTests(unittest.TestCase):
             self.assertTrue(second.is_dir())
             self.assertTrue((ROOT / "plugins" / "django-expert").is_dir())
 
-    def test_duplicate_detection_reports_provenance_and_remediation(self):
-        duplicates = smoke.find_duplicates(
-            [
-                ("django-expert", "codex-marketplace"),
-                ("django-expert", "direct-agent-skill"),
-                ("cdrf-expert", "codex-marketplace"),
-            ]
-        )
+    def test_public_smoke_reports_duplicate_provenance_and_remediation(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
+            home = Path(temporary)
+            direct_skill = home / "skills" / "django-expert"
+            shutil.copytree(ROOT / "skills" / "django-expert", direct_skill)
 
-        self.assertEqual(
-            duplicates,
-            {
-                "django-expert": {
-                    "provenance": ["codex-marketplace", "direct-agent-skill"],
-                    "remediation": "keep one installation channel and remove the shadow copy",
-                }
-            },
-        )
+            with self.assertRaises(smoke.SmokeFailure) as raised:
+                smoke.smoke_repository(ROOT, "codex", home)
+
+            self.assertEqual(
+                str(raised.exception),
+                "duplicate registrations detected: django-expert: "
+                "provenance=codex-marketplace,direct-agent-skill; "
+                "remediation=keep one installation channel and remove the shadow copy",
+            )
+
+    def test_smoke_uses_catalog_package_path_with_stable_install_id(self):
+        source_catalog = self.load_catalog()
+        plugin = copy.deepcopy(source_catalog["plugins"][2])
+        plugin["package"] = "plugins/cdrf-bundle"
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repository"
+            home = Path(temporary) / "home"
+            (root / "plugins").mkdir(parents=True)
+            shutil.copytree(
+                ROOT / source_catalog["plugins"][2]["package"],
+                root / plugin["package"],
+            )
+            (root / "plugins" / "catalog.json").write_text(
+                json.dumps({"plugins": [plugin]})
+            )
+
+            results = smoke.smoke_repository(root, "codex", home)
+
+            self.assertEqual([result["plugin"] for result in results], ["cdrf-expert"])
+            self.assertTrue((home / "plugins" / "cdrf-expert").is_dir())
+            self.assertFalse((home / "plugins" / "cdrf-bundle").exists())
+
+    def test_opencode_smoke_times_out_for_never_resolving_adapter(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repository"
+            home = Path(temporary) / "home"
+            adapter = root / ".opencode" / "plugins" / "django-ai-skills.js"
+            adapter.parent.mkdir(parents=True)
+            adapter.write_text(
+                "export default async () => ({\n"
+                "  config: async () => new Promise(() => "
+                "{ setInterval(() => {}, 1000) }),\n"
+                "})\n"
+            )
+            skill = root / "skills" / "fixture-skill"
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: fixture-skill\ndescription: Fixture.\n---\n"
+            )
+            (root / "package.json").write_text(
+                '{"name":"timeout-fixture","private":true,"type":"module"}\n'
+            )
+            (root / "plugins").mkdir()
+            (root / "plugins" / "catalog.json").write_text(
+                json.dumps({"plugins": [{"id": "fixture-skill"}]})
+            )
+
+            with mock.patch.object(smoke, "OPENCODE_TIMEOUT_SECONDS", 0.1):
+                with self.assertRaises(smoke.SmokeFailure) as raised:
+                    smoke.smoke_repository(root, "opencode", home)
+
+            self.assertIn(
+                "django-ai-skills.js' timed out after 0.1 seconds",
+                str(raised.exception),
+            )
 
     def test_layout_versions_are_bumped_for_cache_refresh(self):
         versions = {plugin["version"] for plugin in self.load_catalog()["plugins"]}

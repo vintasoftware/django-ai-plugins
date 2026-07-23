@@ -1,10 +1,13 @@
 # Django Expert - Reference Documentation
 
-This directory contains comprehensive Django best practices documentation that will be loaded into Claude's context when needed.
+This directory contains comprehensive Django best practices documentation that
+will be loaded into the active AI coding agent's context when needed.
 
 ## Purpose
 
-Reference files provide detailed guidelines, patterns, and examples that would make SKILL.md too long (>5k words). Claude will read these files as needed based on the specific Django task at hand.
+Reference files provide detailed guidelines, patterns, and examples that would
+make SKILL.md too long (>5k words). The agent will read these files as needed
+based on the specific Django task at hand.
 
 ## Recommended Reference Files
 
@@ -168,7 +171,9 @@ class OrderSerializer(serializers.ModelSerializer):
 
 ## Usage
 
-Claude will automatically read these files when working on Django tasks. You don't need to manually reference them - Claude will determine which references are needed based on the task.
+Compatible agents automatically read these files when working on Django tasks.
+You don't need to manually reference them—the active agent will determine which
+references are needed based on the task.
 
 ## Notes
 

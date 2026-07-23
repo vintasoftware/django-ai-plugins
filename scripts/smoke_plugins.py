@@ -15,6 +15,7 @@ from typing import Any, Iterable
 
 
 ROOT = Path(__file__).resolve().parents[1]
+OPENCODE_TIMEOUT_SECONDS = 10
 
 
 class SmokeFailure(RuntimeError):
@@ -67,10 +68,13 @@ def discover_capabilities(package: Path, target: str) -> list[dict[str, Any]]:
     return capabilities
 
 
-def install_package(root: Path, home: Path, plugin_id: str) -> Path:
-    source = root / "plugins" / plugin_id
+def install_package(root: Path, home: Path, plugin: dict[str, Any]) -> Path:
+    plugin_id = plugin["id"]
+    source = root / plugin["package"]
     if not source.is_dir():
-        raise SmokeFailure(f"unknown plugin '{plugin_id}'")
+        raise SmokeFailure(
+            f"plugin '{plugin_id}' has no package source at '{plugin['package']}'"
+        )
     plugins_home = home / "plugins"
     plugins_home.mkdir(parents=True, exist_ok=True)
     destination = plugins_home / plugin_id
@@ -90,16 +94,30 @@ def find_duplicates(
     registrations: Iterable[tuple[str, str]],
 ) -> dict[str, dict[str, Any]]:
     provenance: dict[str, list[str]] = defaultdict(list)
-    for plugin_id, source in registrations:
+    for plugin_id, source in sorted(registrations):
         provenance[plugin_id].append(source)
     return {
         plugin_id: {
             "provenance": sources,
             "remediation": "keep one installation channel and remove the shadow copy",
         }
-        for plugin_id, sources in provenance.items()
+        for plugin_id, sources in sorted(provenance.items())
         if len(sources) > 1
     }
+
+
+def _raise_for_duplicates(registrations: Iterable[tuple[str, str]]) -> None:
+    duplicates = find_duplicates(registrations)
+    if not duplicates:
+        return
+    reports = [
+        (
+            f"{plugin_id}: provenance={','.join(details['provenance'])}; "
+            f"remediation={details['remediation']}"
+        )
+        for plugin_id, details in duplicates.items()
+    ]
+    raise SmokeFailure(f"duplicate registrations detected: {'; '.join(reports)}")
 
 
 def _smoke_opencode(
@@ -120,12 +138,19 @@ def _smoke_opencode(
         "hooks: Object.keys(hooks), paths: config.skills.paths"
         "}));"
     )
-    completed = subprocess.run(
-        ["node", "--input-type=module", "--eval", script],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        completed = subprocess.run(
+            ["node", "--input-type=module", "--eval", script],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=OPENCODE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise SmokeFailure(
+            f"OpenCode adapter '{adapter}' timed out after "
+            f"{OPENCODE_TIMEOUT_SECONDS} seconds"
+        ) from error
     if completed.returncode:
         raise SmokeFailure(
             f"OpenCode adapter failed to load: {completed.stderr.strip()}"
@@ -148,6 +173,7 @@ def _smoke_opencode(
             "provenance": "opencode-plugin",
         }
         for plugin in catalog["plugins"]
+        if "opencode" in plugin["hosts"]
     ]
 
 
@@ -156,7 +182,11 @@ def _smoke_agent_skills(
 ) -> list[dict[str, Any]]:
     skills_home = home / "skills"
     shutil.copytree(root / "skills", skills_home)
-    expected = sorted(plugin["id"] for plugin in catalog["plugins"])
+    expected = sorted(
+        plugin["id"]
+        for plugin in catalog["plugins"]
+        if "agent-skills" in plugin["hosts"]
+    )
     discovered = sorted(path.parent.name for path in skills_home.glob("*/SKILL.md"))
     if discovered != expected:
         raise SmokeFailure(
@@ -182,17 +212,27 @@ def _smoke_in_home(
     if target == "agent-skills":
         return _smoke_agent_skills(root, home, catalog)
     results: list[dict[str, Any]] = []
+    registrations: list[tuple[str, str]] = []
     for plugin in catalog["plugins"]:
-        installed = install_package(root, home, plugin["id"])
+        if target not in plugin["hosts"]:
+            continue
+        installed = install_package(root, home, plugin)
         capabilities = discover_capabilities(installed, target)
+        provenance = f"{target}-marketplace"
         results.append(
             {
                 "plugin": plugin["id"],
                 "status": "ok",
                 "capability": capabilities[0]["id"],
-                "provenance": f"{target}-marketplace",
+                "provenance": provenance,
             }
         )
+        registrations.append((capabilities[0]["id"], provenance))
+    registrations.extend(
+        (skill["id"], "direct-agent-skill")
+        for skill in _discover_skills(home / "skills")
+    )
+    _raise_for_duplicates(registrations)
     return results
 
 

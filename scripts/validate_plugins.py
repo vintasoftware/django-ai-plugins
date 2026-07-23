@@ -28,8 +28,18 @@ REQUIRED_PLUGIN_FIELDS = {
     "keywords",
     "interface",
 }
+REQUIRED_CATALOG_FIELDS = {
+    "schema_version",
+    "repository",
+    "defaults",
+    "marketplaces",
+    "plugins",
+}
 ALLOWED_CAPABILITY_KINDS = {"skill", "agent", "hybrid"}
 ALLOWED_HOSTS = {"claude", "codex", "cursor", "opencode", "agent-skills"}
+NATIVE_HOSTS = {"claude", "codex", "cursor"}
+CLAUDE_OVERRIDE_FIELDS = {"agent_path", "description", "model"}
+CLAUDE_MODELS = {"inherit", "haiku", "sonnet", "opus"}
 SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 
 
@@ -60,6 +70,49 @@ def _safe_relative_path(value: object) -> PurePosixPath | None:
     return path
 
 
+def _resolve_catalog_path(
+    base: Path,
+    value: object,
+    *,
+    boundary: Path,
+) -> tuple[Path | None, str | None]:
+    relative = _safe_relative_path(value)
+    if relative is None:
+        return None, f"unsafe path '{value}'"
+    base = base.absolute()
+    boundary = boundary.resolve()
+    candidate = base.joinpath(*relative.parts)
+    current = base
+    if current.is_symlink():
+        return None, f"symlinked ancestor '{current}'"
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            return None, f"symlinked ancestor '{current}'"
+    resolved = candidate.resolve(strict=False)
+    if resolved != boundary and boundary not in resolved.parents:
+        return None, f"path '{value}' resolves outside '{boundary}'"
+    return candidate, None
+
+
+def _needs_skill_projection(plugin: dict[str, Any]) -> bool:
+    hosts = plugin.get("hosts")
+    if not isinstance(hosts, list):
+        return False
+    native_hosts = set(
+        host for host in hosts if isinstance(host, str)
+    ) & NATIVE_HOSTS
+    capability = plugin.get("capability")
+    if not isinstance(capability, dict):
+        return False
+    kind = capability.get("kind")
+    if kind == "agent":
+        return False
+    if kind == "hybrid":
+        return bool(native_hosts & {"codex", "cursor"})
+    return bool(native_hosts)
+
+
 def _plugin_label(plugin: object, index: int) -> str:
     if isinstance(plugin, dict) and isinstance(plugin.get("id"), str):
         return f"plugin '{plugin['id']}'"
@@ -68,8 +121,57 @@ def _plugin_label(plugin: object, index: int) -> str:
 
 def validate_catalog(catalog: dict[str, Any], root: Path = ROOT) -> list[str]:
     errors: list[str] = []
+    for field in sorted(REQUIRED_CATALOG_FIELDS - catalog.keys()):
+        errors.append(f"catalog is missing required field '{field}'")
     if catalog.get("schema_version") != 1:
         errors.append("catalog schema_version must be 1")
+    if not isinstance(catalog.get("repository"), str) or not catalog[
+        "repository"
+    ].strip():
+        errors.append("catalog repository must be a non-empty string")
+    defaults = catalog.get("defaults")
+    if not isinstance(defaults, dict):
+        errors.append("catalog defaults must be an object")
+    else:
+        author = defaults.get("author")
+        if not isinstance(author, dict):
+            errors.append("catalog defaults.author must be an object")
+        else:
+            for field in ("name", "url"):
+                if (
+                    not isinstance(author.get(field), str)
+                    or not author[field].strip()
+                ):
+                    errors.append(
+                        f"catalog defaults.author.{field} must be "
+                        "a non-empty string"
+                    )
+        for field in ("homepage", "license", "category"):
+            if (
+                not isinstance(defaults.get(field), str)
+                or not defaults[field].strip()
+            ):
+                errors.append(
+                    f"catalog defaults.{field} must be a non-empty string"
+                )
+    marketplaces = catalog.get("marketplaces")
+    if not isinstance(marketplaces, dict):
+        errors.append("catalog marketplaces must be an object")
+    else:
+        for host in ("claude", "codex", "cursor"):
+            marketplace = marketplaces.get(host)
+            if not isinstance(marketplace, dict):
+                errors.append(f"catalog marketplaces.{host} must be an object")
+                continue
+            for field in ("name", "display_name"):
+                if (
+                    not isinstance(marketplace.get(field), str)
+                    or not marketplace[field].strip()
+                ):
+                    errors.append(
+                        f"catalog marketplaces.{host}.{field} must be "
+                        "a non-empty string"
+                    )
 
     plugins = catalog.get("plugins")
     if not isinstance(plugins, list) or not plugins:
@@ -103,16 +205,24 @@ def validate_catalog(catalog: dict[str, Any], root: Path = ROOT) -> list[str]:
             errors.append(f"{label} has invalid description")
 
         package_value = plugin.get("package")
-        package_relative = _safe_relative_path(package_value)
         package_root: Path | None = None
         package_exists = False
-        if package_relative is None:
-            errors.append(f"{label} has unsafe package path '{package_value}'")
+        package_root, package_error = _resolve_catalog_path(
+            root,
+            package_value,
+            boundary=root / "plugins",
+        )
+        if package_error is not None:
+            errors.append(f"{label} package has {package_error}")
         else:
-            package_root = root.joinpath(*package_relative.parts)
+            assert package_root is not None
             package_exists = package_root.is_dir()
             if not package_exists:
                 errors.append(f"{label} references unknown package root '{package_value}'")
+            if package_root.parent != (root / "plugins").resolve():
+                errors.append(
+                    f"{label} package must be a direct child of 'plugins/'"
+                )
 
         capability = plugin.get("capability")
         if not isinstance(capability, dict):
@@ -121,16 +231,47 @@ def validate_catalog(catalog: dict[str, Any], root: Path = ROOT) -> list[str]:
             kind = capability.get("kind")
             if kind not in ALLOWED_CAPABILITY_KINDS:
                 errors.append(f"{label} has unsupported capability kind '{kind}'")
+            canonical_value = capability.get("canonical_path")
+            _, canonical_error = _resolve_catalog_path(
+                root,
+                canonical_value,
+                boundary=root,
+            )
+            if canonical_error is not None:
+                errors.append(
+                    f"{label} canonical capability path has {canonical_error}"
+                )
             surface_value = capability.get("package_path")
-            surface_relative = _safe_relative_path(surface_value)
-            if surface_relative is None:
-                errors.append(f"{label} has unsafe capability path '{surface_value}'")
-            elif package_root is not None and package_exists:
-                surface = package_root.joinpath(*surface_relative.parts)
-                if surface.is_symlink() or not surface.is_file():
+            surface: Path | None = None
+            if package_root is not None:
+                surface, surface_error = _resolve_catalog_path(
+                    package_root,
+                    surface_value,
+                    boundary=package_root,
+                )
+            else:
+                surface_error = f"unsafe path '{surface_value}'"
+            if surface_error is not None:
+                errors.append(
+                    f"{label} package capability path has {surface_error}"
+                )
+            elif package_exists and _needs_skill_projection(plugin):
+                assert surface is not None
+                if not surface.is_file():
                     errors.append(
                         f"{label} advertises no usable surface at "
                         f"'{package_value}/{surface_value}'"
+                    )
+            legacy_value = capability.get("legacy_package_path")
+            if legacy_value is not None and package_root is not None:
+                _, legacy_error = _resolve_catalog_path(
+                    package_root,
+                    legacy_value,
+                    boundary=package_root,
+                )
+                if legacy_error is not None:
+                    errors.append(
+                        f"{label} legacy capability path has {legacy_error}"
                     )
 
         hosts = plugin.get("hosts")
@@ -144,6 +285,43 @@ def validate_catalog(catalog: dict[str, Any], root: Path = ROOT) -> list[str]:
                 errors.append(f"{label} has unsupported host '{host}'")
             if len(hosts) != len(set(host for host in hosts if isinstance(host, str))):
                 errors.append(f"{label} has duplicate hosts")
+            missing_portable_hosts = sorted(
+                {"opencode", "agent-skills"} - set(hosts)
+            )
+            if missing_portable_hosts:
+                errors.append(
+                    f"{label} canonical skills require host(s): "
+                    f"{', '.join(missing_portable_hosts)}"
+                )
+
+        overrides = plugin.get("overrides", {})
+        if not isinstance(overrides, dict):
+            errors.append(f"{label} overrides must be an object")
+        else:
+            claude = overrides.get("claude", {})
+            if not isinstance(claude, dict):
+                errors.append(f"{label} Claude override must be an object")
+            else:
+                unknown_fields = sorted(
+                    set(claude) - CLAUDE_OVERRIDE_FIELDS
+                )
+                for field in unknown_fields:
+                    errors.append(
+                        f"{label} has unsupported Claude override field '{field}'"
+                    )
+                model = claude.get("model")
+                if model is not None and model not in CLAUDE_MODELS:
+                    errors.append(f"{label} has invalid Claude model '{model}'")
+                if "agent_path" in claude and package_root is not None:
+                    _, agent_error = _resolve_catalog_path(
+                        package_root,
+                        claude.get("agent_path"),
+                        boundary=package_root,
+                    )
+                    if agent_error is not None:
+                        errors.append(
+                            f"{label} Claude agent path has {agent_error}"
+                        )
 
     return errors
 
@@ -161,7 +339,11 @@ def validate_marketplace(
     catalog_plugins = {
         plugin["id"]: plugin
         for plugin in catalog.get("plugins", [])
-        if isinstance(plugin, dict) and isinstance(plugin.get("id"), str)
+        if (
+            isinstance(plugin, dict)
+            and isinstance(plugin.get("id"), str)
+            and target in plugin.get("hosts", [])
+        )
     }
     entries = marketplace.get("plugins")
     if not isinstance(entries, list):

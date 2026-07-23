@@ -8,6 +8,23 @@ Replace `django-expert` in the examples with any catalog ID:
 `django-celery-expert`, `cdrf-expert`, `django-safe-migration`, or
 `django-reviewer`.
 
+## Migrating from flat 1.0 packages
+
+Earlier package checkouts exposed these skills at a flat
+`plugins/<id>/skills/SKILL.md` path. The normalized package layout moves each
+skill into its own named directory:
+
+| ID | Former path | Current path |
+| --- | --- | --- |
+| `django-expert` | `plugins/django-expert/skills/SKILL.md` | `plugins/django-expert/skills/django-expert/SKILL.md` |
+| `django-celery-expert` | `plugins/django-celery-expert/skills/SKILL.md` | `plugins/django-celery-expert/skills/django-celery-expert/SKILL.md` |
+| `cdrf-expert` | `plugins/cdrf-expert/skills/SKILL.md` | `plugins/cdrf-expert/skills/cdrf-expert/SKILL.md` |
+
+If you copy packages directly, replace the complete package directory so its
+skill references move with it. Do not retain both the former and current
+discoverable paths: hosts can register the same skill ID twice. Native
+marketplace installations should use the host-specific update steps below.
+
 ## Claude Code
 
 Claude uses `.claude-plugin/marketplace.json`.

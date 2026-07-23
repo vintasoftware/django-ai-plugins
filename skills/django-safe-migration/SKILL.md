@@ -11,7 +11,8 @@ description: >
 
 ## Project Configuration
 
-Read the project's `CLAUDE.md` or `AGENTS.md` for the values below. If they are not set, use the defaults shown.
+Read the active host's project instruction file (for example, `AGENTS.md` or
+`CLAUDE.md`) for the values below. If they are not set, use the defaults shown.
 
 | Key | Default | Notes |
 |---|---|---|
@@ -21,7 +22,8 @@ Read the project's `CLAUDE.md` or `AGENTS.md` for the values below. If they are 
 | **Migration command** | `python manage.py sqlmigrate` | e.g. `make sqlmigrate` or `docker compose run web python manage.py sqlmigrate` |
 | **Docs / wiki URL** | none | If set, append `#<anchor>` links when flagging issues in review output |
 
-To configure this skill for your project, add a section like this to your `CLAUDE.md` or `AGENTS.md`:
+To configure this skill for your project, add a section like this to the active
+host's project instruction file:
 
 ```
 ## django-safe-migration
@@ -126,7 +128,7 @@ Identify every operation that is unsafe or risky for a rolling deploy on Postgre
 ### Steps
 
 1. Read the migration file in full.
-2. Run `<migration_command> <app_label> <migration_name>` to get the actual SQL Django will execute. **Always do this — the generated SQL is the ground truth.** Use the `Migration command` value from `CLAUDE.md`/`AGENTS.md`; default is `python manage.py sqlmigrate`. If the key is not set and a `Makefile` or `docker-compose.yml` exists in the project root, ask the user: "How do you run sqlmigrate in this project?" and suggest they save the answer to `CLAUDE.md`. The ORM operation class alone is not sufficient: for example, `AlterField` on a FK field that adds `null=True` also drops and re-adds the FK constraint, emitting `DROP CONSTRAINT` (taking `ACCESS EXCLUSIVE` on both the child and referenced table) followed by `ADD CONSTRAINT FOREIGN KEY` without `NOT VALID` (taking `SHARE ROW EXCLUSIVE` with a full scan on both tables) — neither is visible from the migration file alone.
+2. Run `<migration_command> <app_label> <migration_name>` to get the actual SQL Django will execute. **Always do this — the generated SQL is the ground truth.** Use the `Migration command` value from the active host's project instruction file; default is `python manage.py sqlmigrate`. If the key is not set and a `Makefile` or `docker-compose.yml` exists in the project root, ask the user: "How do you run sqlmigrate in this project?" and suggest they save the answer to that instruction file. The ORM operation class alone is not sufficient: for example, `AlterField` on a FK field that adds `null=True` also drops and re-adds the FK constraint, emitting `DROP CONSTRAINT` (taking `ACCESS EXCLUSIVE` on both the child and referenced table) followed by `ADD CONSTRAINT FOREIGN KEY` without `NOT VALID` (taking `SHARE ROW EXCLUSIVE` with a full scan on both tables) — neither is visible from the migration file alone.
 3. Load `references/operation-guide.md`. Load `references/postgres-locks.md` when explaining why a flagged operation is unsafe.
 4. For each SQL statement produced, check it against the detection checklist below.
 5. If any operation requires `ACCESS EXCLUSIVE` (flagged as error or warning), ask the user before outputting the report:
