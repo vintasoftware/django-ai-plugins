@@ -33,6 +33,22 @@ class DocumentationContractTests(unittest.TestCase):
         ):
             self.assertIn(operation, installation)
 
+    def test_installation_doc_covers_skills_sh_lifecycle(self):
+        installation = (ROOT / "docs" / "installation.md").read_text()
+
+        self.assertIn(
+            "https://skills.sh/vintasoftware/django-ai-plugins",
+            installation,
+        )
+        for command in (
+            "npx skills add vintasoftware/django-ai-plugins --list",
+            "npx skills add vintasoftware/django-ai-plugins --skill django-expert",
+            "npx skills update django-expert",
+            "npx skills remove django-expert",
+        ):
+            self.assertIn(command, installation)
+        self.assertIn("Do not install the same skill ID", installation)
+
     def test_documented_local_commands_reference_existing_scripts(self):
         installation = (ROOT / "docs" / "installation.md").read_text()
         contributor = (ROOT / "AGENTS.md").read_text()

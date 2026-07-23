@@ -100,10 +100,50 @@ OpenCode skill permissions can be configured in `opencode.json`. If a skill is
 hidden or denied, allow its ID under the `permission.skill` rules; this project
 does not bypass host permissions.
 
-## Generic Agent Skills
+## Skills.sh and generic Agent Skills
+
+The [`skills` CLI](https://skills.sh/vintasoftware/django-ai-plugins) is the
+recommended portable installer for hosts that support Agent Skills. It detects
+compatible agents and installs from the canonical `skills/` collection.
+
+List the skills available in this repository without installing them:
+
+```bash
+npx skills add vintasoftware/django-ai-plugins --list
+```
+
+Start an interactive installation for the collection:
+
+```bash
+npx skills add vintasoftware/django-ai-plugins
+```
+
+Install one skill, optionally targeting specific agents:
+
+```bash
+npx skills add vintasoftware/django-ai-plugins --skill django-expert
+npx skills add vintasoftware/django-ai-plugins --skill django-expert --agent codex --agent cursor
+```
+
+Use `--global` to make a skill available outside the current project:
+
+```bash
+npx skills add vintasoftware/django-ai-plugins --skill django-expert --global
+```
+
+Update or remove an installation with the same CLI:
+
+```bash
+npx skills update django-expert
+npx skills remove django-expert
+```
+
+Skills.sh is a generic Agent Skills channel. Do not install the same skill ID
+through Skills.sh and a native Claude, Codex, or Cursor marketplace at the same
+time; keep one channel and remove any shadow copy.
 
 Agent Skills consumers can read `skills/<id>/SKILL.md` directly. For a
-user-level installation, copy one complete canonical directory:
+manual user-level installation, copy one complete canonical directory:
 
 ```bash
 cp -R skills/django-expert ~/.agents/skills/django-expert
