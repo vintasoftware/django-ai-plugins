@@ -1,7 +1,7 @@
 {
   "name": "django-expert",
-  "version": "1.0.0",
-  "description": "Comprehensive Django backend development guidelines and best practices for Codex.",
+  "version": "1.1.0",
+  "description": "Comprehensive Django backend development guidelines and best practices. Expert guidance for models, views, templates, DRF, testing, and deployment.",
   "author": {
     "name": "Vinta Software",
     "url": "https://www.vinta.com.br/"
@@ -18,7 +18,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Django Expert",
-    "shortDescription": "Django backend guidance for Codex.",
+    "shortDescription": "Django backend guidance.",
     "longDescription": "Expert Django backend development guidance covering models, views, DRF, testing, security, performance, and deployment.",
     "developerName": "Vinta Software",
     "category": "Developer Tools",

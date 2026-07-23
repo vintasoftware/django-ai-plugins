@@ -41,10 +41,10 @@
       "category": "Developer Tools"
     },
     {
-      "name": "django-reviewer",
+      "name": "django-safe-migration",
       "source": {
         "source": "local",
-        "path": "./plugins/django-reviewer"
+        "path": "./plugins/django-safe-migration"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -53,10 +53,10 @@
       "category": "Developer Tools"
     },
     {
-      "name": "django-safe-migration",
+      "name": "django-reviewer",
       "source": {
         "source": "local",
-        "path": "./plugins/django-safe-migration"
+        "path": "./plugins/django-reviewer"
       },
       "policy": {
         "installation": "AVAILABLE",

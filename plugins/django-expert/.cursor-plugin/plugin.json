@@ -1,0 +1,20 @@
+{
+  "name": "django-expert",
+  "displayName": "Django Expert",
+  "version": "1.1.0",
+  "description": "Comprehensive Django backend development guidelines and best practices. Expert guidance for models, views, templates, DRF, testing, and deployment.",
+  "author": {
+    "name": "Vinta Software"
+  },
+  "homepage": "https://github.com/vintasoftware/django-ai-plugins",
+  "repository": "https://github.com/vintasoftware/django-ai-plugins",
+  "license": "MIT",
+  "keywords": [
+    "django",
+    "backend",
+    "drf",
+    "python"
+  ],
+  "category": "Developer Tools",
+  "skills": "./skills/"
+}

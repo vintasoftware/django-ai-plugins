@@ -1,24 +1,11 @@
-# Django Safe Migration Plugin
+# Django Safe Migration
 
-A Skill for writing, reviewing, and rewriting Django migrations for PostgreSQL with zero-downtime deployment safety in mind.
+PostgreSQL-aware guidance for reviewing and rewriting Django migrations for
+rolling deploys, including concurrent indexes, staged constraints, defaults,
+lock timeouts, and data migration safety.
 
-## What this skill covers
+The portable skill and its references are under
+`skills/django-safe-migration/`. Host manifests and this package-local
+projection are generated from the repository catalog.
 
-- Reviewing generated SQL with `sqlmigrate` before judging migration safety
-- Rewriting unsafe operations with PostgreSQL-aware patterns
-- Using `SeparateDatabaseAndState` splits for rolling deploy compatibility
-- Creating indexes with `AddIndexConcurrently`
-- Adding constraints with `NOT VALID` plus `VALIDATE`
-- Handling `db_default`, `lock_timeout`, and `RunPython` risks
-
-## Plugin structure
-
-```text
-django-safe-migration/
-├── .codex-plugin/plugin.json
-├── skills/django-safe-migration/SKILL.md
-└── skills/django-safe-migration/references/
-    ├── examples.md
-    ├── operation-guide.md
-    └── postgres-locks.md
-```
+See the shared [installation and lifecycle guide](../../docs/installation.md).

@@ -1,7 +1,7 @@
 {
   "name": "django-safe-migration",
-  "version": "1.0.0",
-  "description": "Write, review, and rewrite Django migrations for PostgreSQL with zero-downtime guarantees.",
+  "version": "1.1.0",
+  "description": "Write, review, and rewrite Django migrations for PostgreSQL with zero-downtime guarantees. Covers two-file splits, AddIndexConcurrently, FK NOT VALID + VALIDATE, db_default for NOT NULL columns, and RunPython safety rules.",
   "author": {
     "name": "Vinta Software",
     "url": "https://www.vinta.com.br/"
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Django Safe Migration",
-    "shortDescription": "A Codex agent for zero-downtime Django migrations.",
-    "longDescription": "Autonomous agent that writes, reviews, and rewrites Django migrations for PostgreSQL rolling deploys. Covers two-file SeparateDatabaseAndState splits, AddIndexConcurrently, FK NOT VALID + VALIDATE, db_default for NOT NULL columns, lock_timeout, and RunPython safety rules.",
+    "shortDescription": "Zero-downtime Django migrations.",
+    "longDescription": "Guidance for writing, reviewing, and rewriting Django migrations for PostgreSQL rolling deploys.",
     "developerName": "Vinta Software",
     "category": "Developer Tools",
     "capabilities": [
@@ -27,11 +27,10 @@
       "Write"
     ],
     "websiteURL": "https://github.com/vintasoftware/django-safe-migration-plugin",
-    "privacyPolicyURL": "https://www.vinta.com.br/privacy-policy",
-    "termsOfServiceURL": "https://github.com/vintasoftware/django-safe-migration-plugin/blob/main/LICENSE",
-    "screenshots": [],
     "defaultPrompt": [
       "Review this migration for zero-downtime safety."
-    ]
+    ],
+    "privacyPolicyURL": "https://www.vinta.com.br/privacy-policy",
+    "termsOfServiceURL": "https://github.com/vintasoftware/django-safe-migration-plugin/blob/main/LICENSE"
   }
 }

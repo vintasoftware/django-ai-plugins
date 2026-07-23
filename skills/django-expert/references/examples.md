@@ -7,7 +7,7 @@ Practical examples demonstrating Django best practices for common development sc
 **User Request:**
 > "Create a User model with email authentication, profile tracking, and a way to query active users"
 
-**Claude Response:**
+**Agent Response:**
 ```
 I'll create a custom User model following Django best practices:
 
@@ -89,7 +89,7 @@ def post_list(request):
 # {% endfor %}
 ```
 
-**Claude Response:**
+**Agent Response:**
 ```
 I can see the N+1 query problem. The view fetches posts, but the template
 accesses related `author` (ForeignKey) and `comments` (reverse ForeignKey)
@@ -132,7 +132,7 @@ def post_list(request):
 **User Request:**
 > "Create a REST API for my Product model with filtering, pagination, and proper permissions"
 
-**Claude Response:**
+**Agent Response:**
 ```
 I'll implement a complete DRF endpoint following best practices:
 

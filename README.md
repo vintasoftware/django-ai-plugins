@@ -1,181 +1,61 @@
-# Django Agent Skills
+# Django AI Skills
 
-A collection of skills and agents for AI coding agents specialized in Django backend development.
+Portable Django expertise for Claude Code, Codex, Cursor, OpenCode, and tools
+that implement the [Agent Skills specification](https://agentskills.io/).
 
-## Available Skills & Agents
+The repository has one canonical authoring tree under `skills/`. Host manifests
+and package-local projections are generated from `plugins/catalog.json`, so the
+same behavior is delivered without maintaining separate copies by hand.
 
-### django-expert (Skill)
+## Included capabilities
 
-Comprehensive Django development guidelines from Vinta Software. Contains best practices across multiple categories for building robust Django applications.
+| ID | Capability |
+| --- | --- |
+| `django-expert` | Django backend, ORM, DRF, security, testing, and performance guidance |
+| `django-celery-expert` | Reliable Celery task design, retries, scheduling, and operations |
+| `cdrf-expert` | DRF class selection, lifecycle tracing, MRO, and safe override guidance |
+| `django-safe-migration` | PostgreSQL-aware, zero-downtime Django migration guidance |
+| `django-reviewer` | Report-first Django and Python review for recent or user-selected changes |
 
-**Use when:**
-- Building new Django models, views, or APIs
-- Implementing authentication or authorization
-- Setting up Django REST Framework endpoints
-- Reviewing Django code for best practices
-- Optimizing database queries and performance
+See [installation and lifecycle instructions](docs/installation.md) for each
+host and the [compatibility matrix](docs/compatibility.md) for the validation
+level of every adapter.
 
-**Categories covered:**
-- Project structure and configuration
-- Models and database design
-- Views and URL routing
-- Django REST Framework integration
-- Security best practices
-- Testing strategies
-- Performance optimization
-- Production deployment
+## Repository layout
 
-### django-celery-expert (Skill)
+```text
+skills/                         canonical Agent Skills
+plugins/catalog.json            canonical metadata and host declarations
+plugins/<id>/                   self-contained generated plugin packages
+.claude-plugin/                 Claude marketplace
+.agents/plugins/                Codex marketplace
+.cursor-plugin/                 Cursor marketplace
+.opencode/plugins/              OpenCode skills-path adapter
+scripts/                        generation, validation, and isolated smoke checks
+```
 
-Expert guidance for Django applications using Celery for asynchronous task processing. Incorporates best practices from Vinta Software's production experience.
+Package manifests and package-local skills are generated outputs. Contributors
+should read [AGENTS.md](AGENTS.md) before changing the catalog or skill content.
 
-**Use when:**
-- Creating background tasks for email, notifications, or data processing
-- Configuring Celery workers and message brokers
-- Implementing retry logic and error handling
-- Setting up periodic/scheduled tasks with Celery Beat
-- Monitoring and debugging Celery tasks
-- Deploying Celery to production
-
-**Categories covered:**
-- Django-Celery integration patterns (transaction.on_commit, recovery tasks)
-- Task design patterns (idempotency, workflows, atomicity)
-- Broker configuration (Redis, RabbitMQ, SQS)
-- Error handling and retry strategies
-- Periodic tasks and scheduling
-- Monitoring and observability (Flower, Prometheus)
-- Production deployment and scaling
-
-### cdrf-expert (Skill)
-
-Expert guidance for Django REST Framework class-based views using [Classy DRF](https://www.cdrf.co). Focuses on choosing the correct DRF view class and override hook with MRO-backed reasoning.
-
-**Use when:**
-- Choosing between `APIView`, generic views, `GenericViewSet`, and `ModelViewSet`
-- Debugging DRF class-based view behavior
-- Identifying where to override (`perform_create`, `perform_update`, `get_queryset`, etc.)
-- Tracing method resolution order and method source class
-- Comparing DRF behavior across versions
-
-**Categories covered:**
-- DRF class selection matrix
-- Request lifecycle and override strategy
-- MRO debugging workflow
-- DRF version comparison workflow
-
-### django-safe-migration (Skill)
-
-Zero-downtime migration guidance for Django projects on PostgreSQL. Focuses on SQL-level safety during rolling deploys rather than only the migration operation names.
-
-**Use when:**
-- Reviewing whether a migration is safe to deploy
-- Writing a migration for schema changes under live traffic
-- Rewriting unsafe migration operations into staged patterns
-- Reasoning about PostgreSQL locks and deploy compatibility
-
-**Categories covered:**
-- `sqlmigrate`-driven review workflow
-- `SeparateDatabaseAndState` rollout patterns
-- Concurrent index creation and removal
-- Foreign key and check constraint validation strategy
-- `db_default`, `lock_timeout`, and `RunPython` safety rules
-
-### django-reviewer (Agent)
-
-Autonomous code review agent that refines Django/Python code for clarity, consistency, and maintainability. Focuses on recently modified code and applies Django best practices without changing functionality.
-
-**Use when:**
-- Reviewing recently modified Django code for anti-patterns
-- Refining models, views, serializers, or ORM queries
-- Enforcing PEP 8 and Django coding style consistency
-- Detecting N+1 queries and performance issues
-- Simplifying overly complex view or serializer logic
-
-**What it reviews:**
-- N+1 queries (missing `select_related`/`prefetch_related`)
-- Business logic placement (fat models, thin views)
-- ORM usage vs raw SQL
-- Import organization and naming conventions
-- DRF serializer and viewset patterns
-- Database constraints and index usage
-- Test structure and coverage patterns
-
-## Installation
-
-### Codex
-
-This repository exposes a local Codex marketplace at:
+## Local validation
 
 ```bash
-.agents/plugins/marketplace.json
+python scripts/generate_adapters.py --check
+python scripts/validate_plugins.py
+python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Each plugin directory now also includes a Codex manifest at `.codex-plugin/plugin.json`. Use the marketplace file above or the individual plugin manifests when registering these plugins in Codex:
-
-- `django-expert`
-- `django-celery-expert`
-- `cdrf-expert`
-- `django-safe-migration`
-- `django-reviewer`
-
-### Generic Open-Plugin Installer
-
-If you use the community `plugins` CLI, this repository can also be installed from the repo root or GitHub URL:
+The smoke runner accepts `claude`, `codex`, `cursor`, `opencode`, and
+`agent-skills` targets and always installs into a temporary location:
 
 ```bash
-npx plugins add vintasoftware/django-ai-plugins
+python scripts/smoke_plugins.py --target cursor
 ```
 
-```bash
-npx plugins add https://github.com/vintasoftware/django-ai-plugins
-```
-
-As of March 18, 2026, the `plugins` package docs explicitly list Claude Code and Cursor as supported install targets. Treat Codex support through that tool as unverified unless you have confirmed it in your environment.
-
-## Usage
-
-Skills are automatically available once installed. The agent will use them when relevant tasks are detected.
-
-**Examples:**
-```
-Create a new Django model for user profiles
-```
-```
-Set up a REST API endpoint with authentication
-```
-```
-Should I override create or perform_create in this DRF ViewSet?
-```
-```
-Review this Django view for security issues
-```
-```
-Use the django-reviewer agent to review my recent changes
-```
-
-## Plugin Structure
-
-Each plugin contains either skills or agents:
-
-- **Codex manifest** (`.codex-plugin/plugin.json`) — Codex plugin metadata
-- **Claude manifest** (`.claude-plugin/plugin.json`) — Claude metadata
-- **Skills** (`skills/SKILL.md`) — Instructions and reference documentation loaded on-demand
-- **Agents** (`agents/<name>.md`) — Autonomous specialists that proactively review and refine code
-
-## Integration with django-ai-boost MCP Server
-
-This skill works seamlessly with the [django-ai-boost MCP server](https://github.com/vintasoftware/django-ai-boost), which provides additional Django-specific tools and capabilities.
-
-To use both together:
-
-1. Install the django-ai-boost MCP server following its documentation
-2. Install this skill using the instructions above
-3. The skills will leverage the tools provided by the MCP server for enhanced Django development capabilities
-
-## Miscellaneous
-
-Skills follow the [Agent Skills](https://agentskills.io/) format and work with any compatible AI coding agent.
+These skills can complement the
+[django-ai-boost MCP server](https://github.com/vintasoftware/django-ai-boost);
+neither project requires the other.
 
 ## License
 
-MIT @ Vinta Software
+MIT © Vinta Software

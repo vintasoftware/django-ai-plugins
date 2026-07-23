@@ -1,0 +1,20 @@
+{
+  "name": "cdrf-expert",
+  "displayName": "CDRF Expert",
+  "version": "1.1.0",
+  "description": "Expert guidance for Django REST Framework class-based views using Classy DRF (cdrf.co). Helps choose the right DRF generic/viewset class and override methods safely.",
+  "author": {
+    "name": "Vinta Software"
+  },
+  "homepage": "https://github.com/vintasoftware/django-ai-plugins",
+  "repository": "https://github.com/vintasoftware/django-ai-plugins",
+  "license": "MIT",
+  "keywords": [
+    "django-rest-framework",
+    "drf",
+    "cdrf",
+    "api"
+  ],
+  "category": "Developer Tools",
+  "skills": "./skills/"
+}
